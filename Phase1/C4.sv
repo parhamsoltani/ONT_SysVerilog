@@ -1,5 +1,5 @@
 class C4;
-    randc bit [8:0] payload [259:0]; // 260x9 block of bits (each bit[8:0] represents a byte)
+    randc bit payload [2339:0]; // 260x9 block of bits
     
     // Constructor to initialize and randomize the payload array
     function new();
