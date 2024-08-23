@@ -14,7 +14,6 @@ class VC4;
             $display("VC4: C4 randomization failed");
         else
             $display ("VC4: This will be called just before randomization");
-            c4.randomize ()
         end
     endfunction
 
@@ -72,14 +71,14 @@ class VC4;
     function byte calculate_F2();
         // F2: Path User Channel
         // This is typically used for communication between path terminating equipment
-        // For this example, we'll just return a fixed value
+        // For this application, we'll just return a fixed value
         return 8'hAA;
     endfunction
 
     function byte calculate_H4();
         // H4: Multiframe Indicator
         // Used for payloads requiring multiframe alignment
-        // For this example, we'll use a simple counter
+        // For this application, we'll use a simple counter
         static byte h4_counter = 0;
         h4_counter = (h4_counter + 1) % 16; // 4-bit counter
         return h4_counter;
@@ -88,7 +87,7 @@ class VC4;
     function byte calculate_F3();
         // F3: Path User Channel
         // Similar to F2, but for a different user
-        // For this example, we'll just return a fixed value
+        // For this application, we'll just return a fixed value
         return 8'h55;
     endfunction
 
@@ -96,14 +95,14 @@ class VC4;
         // K3: APS (Automatic Protection Switching) Channel
         // Bits 1-4: Switching request type
         // Bits 5-8: Channel number
-        // For this example, we'll assume no switching request
+        // For this application, we'll assume no switching request
         return 8'h00;
     endfunction
 
     function byte calculate_N1();
         // N1: Network Operator Byte
         // This byte is reserved for network operator use
-        // For this example, we'll just return a fixed value
+        // For this application, we'll just return a fixed value
         return 8'hFF;
     endfunction
 
