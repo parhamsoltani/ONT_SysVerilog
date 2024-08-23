@@ -5,57 +5,119 @@ class VC4;
     C4 c4;
     rand bit [Byte_Num-1:0] poh[c4_Width];  // Path Overhead
     byte J1, B3, C2, G1, F2, H4, F3, K3, N1;
+    
+    // J1 trace variables
+    const string J1_TRACE_MESSAGE = "PARMAN_________";
+    const int J1_FRAME_LENGTH = 16;
+    byte j1_frame[J1_FRAME_LENGTH];
+    int j1_frame_counter;
+
+    // B3 and C2 related variables
+    byte previous_vc4_data[];
+    byte c2_value;
+
     function new();
-        c4 = new ();
+        c4 = new();
+        j1_frame_counter = 0;
+        init_j1_frame();
+        c2_value = 8'h02;  // Default value for "TU-3 Structured"
     endfunction 
 
-    function void pre_randomize ();
-        if (!c4.randomize()) begin
-            $display("VC4: C4 randomization failed");
-        else
-            $display ("VC4: This will be called just before randomization");
+    function void init_j1_frame();
+        for (int i = 0; i < J1_FRAME_LENGTH; i++) begin
+            if (i < J1_TRACE_MESSAGE.len()) begin
+                j1_frame[i] = byte'(J1_TRACE_MESSAGE[i]);
+            end else begin
+                j1_frame[i] = " "; // Space character
+            end
         end
     endfunction
 
-    function void post_randomize ();
-        $display("VC4: This will be called just after randomization");
-        // Initialize Path Overhead according to ITU-T G.707
-        poh[0] = calculate_J1();
-        poh[1] = calculate_B3();
-        poh[2] = calculate_C2();
-        poh[3] = calculate_G1();
-        poh[4] = calculate_F2();
-        poh[5] = calculate_H4();
-        poh[6] = calculate_F3();
-        poh[7] = calculate_K3();
-        poh[8] = calculate_N1();
-
-
+    function void pre_randomize();
+        if (!c4.randomize()) begin
+            $display("VC4: C4 randomization failed");
+        end else begin
+            $display("VC4: This will be called just before randomization");
+        end
     endfunction
 
+    function void post_randomize();
+        $display("VC4: This will be called just after randomization");
+        // Initialize Path Overhead according to ITU-T G.707
+        J1 = calculate_J1();
+        B3 = calculate_B3();
+        C2 = calculate_C2();
+        G1 = calculate_G1();
+        F2 = calculate_F2();
+        H4 = calculate_H4();
+        F3 = calculate_F3();
+        K3 = calculate_K3();
+        N1 = calculate_N1();
 
-    function byte calculate_J1(C4 c4,);
-        // J1: Path Trace
-        // In practice, this would be a 16-byte frame-aligned trace message
-        // For simplicity, we'll just use a counter here
-        static byte j1_counter = 0;
-        j1_counter++;
-        return j1_counter;
+        // Update POH array
+        poh[0] = J1;
+        poh[1] = B3;
+        poh[2] = C2;
+        poh[3] = G1;
+        poh[4] = F2;
+        poh[5] = H4;
+        poh[6] = F3;
+        poh[7] = K3;
+        poh[8] = N1;
+    endfunction
+
+    function byte calculate_J1();
+        byte crc;
+        byte frame_start;
+        
+        // Calculate CRC-7 for the previous frame
+        crc = calculate_crc7(j1_frame);
+        
+        // Prepare the frame start byte (CRC in bits 1-7, frame start indicator in bit 8)
+        frame_start = (crc << 1) | 1'b1;
+        
+        // Increment the frame counter and wrap around if necessary
+        j1_frame_counter = (j1_frame_counter + 1) % J1_FRAME_LENGTH;
+        
+        // Return the appropriate byte based on the current frame position
+        if (j1_frame_counter == 0) begin
+            return frame_start;
+        end else begin
+            return j1_frame[j1_frame_counter - 1];
+        end
+    endfunction
+
+    function byte calculate_crc7(byte data[J1_FRAME_LENGTH]);
+        bit [6:0] crc = 7'h7F;
+        bit [7:0] current_byte;
+        
+        for (int i = 0; i < J1_FRAME_LENGTH; i++) begin
+            current_byte = data[i];
+            for (int j = 0; j < 8; j++) begin
+                if ((crc[6] ^ current_byte[7]) == 1'b1) begin
+                    crc = (crc << 1) ^ 7'h09;
+                end else begin
+                    crc = crc << 1;
+                end
+                current_byte = current_byte << 1;
+            end
+        end
+        
+        return byte'(crc);
     endfunction
 
     function byte calculate_B3();
-        // B3: Path BIP-8
         byte bip8 = 8'h00;
-        for (int i = 0; i < c4.data.size(); i++) begin
-            bip8 ^= c4.data[i];
+        if (previous_vc4_data.size() > 0) begin
+            for (int i = 0; i < previous_vc4_data.size(); i++) begin
+                bip8 ^= previous_vc4_data[i];
+            end
         end
         return bip8;
     endfunction
 
     function byte calculate_C2();
-        // C2: Path Signal Label
-        // For example, 0x02 indicates "TU-3 Structured"
-        return 8'h02;
+        return c2_value;
     endfunction
 
     function byte calculate_G1();
@@ -106,9 +168,6 @@ class VC4;
         return 8'hFF;
     endfunction
 
-
-    //This function needs some correction as it is not 
-    //adding the POH to the block with 261 columns, but the 260.
     function void insert_poh();
         for (int i = 0; i < 9; i++) begin
             c4.data[i][0] = poh[i];
@@ -122,5 +181,20 @@ class VC4;
         end
     endfunction
 
+    // New function to set C2 value
+    function void set_c2_value(byte value);
+        c2_value = value;
+    endfunction
 
-endclass 
+    // New function to update previous VC-4 data
+    function void update_previous_vc4_data();
+        previous_vc4_data = new[c4.data.size() * c4.data[0].size()];
+        int index = 0;
+        for (int i = 0; i < c4.data.size(); i++) begin
+            for (int j = 0; j < c4.data[i].size(); j++) begin
+                previous_vc4_data[index++] = c4.data[i][j];
+            end
+        end
+    endfunction
+
+endclass
