@@ -20,7 +20,7 @@ class VC4;
         c4 = new();
         j1_frame_counter = 0;
         init_j1_frame();
-        c2_value = 8'h02;  // Default value for "TU-3 Structured"
+        c2_value = 8'h02; 
     endfunction 
 
     function void init_j1_frame();
