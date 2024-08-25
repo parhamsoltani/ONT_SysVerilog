@@ -1,9 +1,9 @@
 class AU4;
     VC4 vc4;
-    rand bit [15:0] h1h2;  // H1 and H2 bytes of the AU pointer
-    rand bit [7:0] h3;     // H3 byte of the AU pointer
-    bit [7:0] aup[3];      // Administrative Unit Pointer
-    
+    rand bit [15:0] h1h2; // H1 and H2 bytes of the AU pointer
+    rand bit [7:0] h3;    // H3 byte of the AU pointer
+    bit [7:0] aup[3];     // Administrative Unit Pointer
+
     // Pointer-related variables
     int pointer_value;
     bit new_data_flag;
@@ -34,14 +34,14 @@ class AU4;
 
     function void calculate_aup();
         // Calculate the AU pointer based on G.707
-        pointer_value = h1h2 & 16'h03FF;  // Extract 10-bit pointer value
+        pointer_value = h1h2 & 16'h03FF; // Extract 10-bit pointer value
         new_data_flag = h1h2[10];
         increment_flag = h1h2[11];
         decrement_flag = h1h2[12];
 
         // Construct H1 and H2 bytes
-        aup[0] = {1'b1, 1'b0, 1'b1, 1'b0, 1'b1, 1'b1, h1h2[9:8]};  // H1
-        aup[1] = h1h2[7:0];  // H2
+        aup[0] = {1'b1, 1'b0, 1'b1, 1'b0, 1'b1, 1'b1, h1h2[9:8]}; // H1
+        aup[1] = h1h2[7:0];                                       // H2
 
         // Construct H3 byte based on pointer adjustment
         if (increment_flag) begin
@@ -49,10 +49,10 @@ class AU4;
         end else if (decrement_flag) begin
             aup[2] = NEGATIVE_STUFF_OPPORTUNITY;
         end else begin
-            aup[2] = h3;  // Normal operation
+            aup[2] = h3; // Normal operation
         end
 
-        $display("AU4: Pointer Value: %0d, New Data Flag: %b, Increment: %b, Decrement: %b", 
+        $display("AU4: Pointer Value: %0d, New Data Flag: %b, Increment: %b, Decrement: %b",
                  pointer_value, new_data_flag, increment_flag, decrement_flag);
     endfunction
 
@@ -86,7 +86,7 @@ class AU4;
         for (int i = 0; i < 261*9; i++) begin
             int row = i / 261;
             int col = i % 261;
-            
+
             if (col == stuff_column) begin
                 if (increment_flag && row == 0) begin
                     frame[261*9*8-24-1 - i*8 -: 8] = POSITIVE_STUFF_OPPORTUNITY;
@@ -111,7 +111,7 @@ class AU4;
     // Function to simulate pointer adjustments over time
     function void simulate_pointer_adjustment();
         // Randomly decide whether to adjust the pointer
-        if ($urandom_range(100) < 5) begin  // 5% chance of adjustment
+        if ($urandom_range(100) < 5) begin // 5% chance of adjustment
             if ($urandom_range(1) == 0) begin
                 // Positive justification
                 increment_flag = 1;
@@ -128,7 +128,7 @@ class AU4;
             increment_flag = 0;
             decrement_flag = 0;
         end
-        
+
         calculate_aup();
     endfunction
 endclass
