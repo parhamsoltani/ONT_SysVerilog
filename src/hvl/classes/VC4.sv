@@ -7,7 +7,7 @@ class VC4;
     byte J1, B3, C2, G1, F2, H4, F3, K3, N1;
 
     // J1 trace variables
-    const string J1_TRACE_MESSAGE = "PARMAN_____";
+    const string J1_TRACE_MESSAGE = "PARMAN_________";
     const int J1_FRAME_LENGTH = 16;
     byte j1_frame[J1_FRAME_LENGTH];
     int j1_frame_counter;
