@@ -3,11 +3,11 @@ import C4::*;
 
 class VC4;
     C4 c4;
-    rand bit [Byte_Num-1:0] poh[c4_Width];  // Path Overhead
+    rand bit [Byte_Num-1:0] poh[c4_Width]; // Path Overhead
     byte J1, B3, C2, G1, F2, H4, F3, K3, N1;
-    
+
     // J1 trace variables
-    const string J1_TRACE_MESSAGE = "PARMAN_________";
+    const string J1_TRACE_MESSAGE = "PARMAN_____";
     const int J1_FRAME_LENGTH = 16;
     byte j1_frame[J1_FRAME_LENGTH];
     int j1_frame_counter;
@@ -20,8 +20,8 @@ class VC4;
         c4 = new();
         j1_frame_counter = 0;
         init_j1_frame();
-        c2_value = 8'h02; 
-    endfunction 
+        c2_value = 8'h02;
+    endfunction
 
     function void init_j1_frame();
         for (int i = 0; i < J1_FRAME_LENGTH; i++) begin
@@ -43,6 +43,7 @@ class VC4;
 
     function void post_randomize();
         $display("VC4: This will be called just after randomization");
+
         // Initialize Path Overhead according to ITU-T G.707
         J1 = calculate_J1();
         B3 = calculate_B3();
@@ -69,16 +70,16 @@ class VC4;
     function byte calculate_J1();
         byte crc;
         byte frame_start;
-        
+
         // Calculate CRC-7 for the previous frame
         crc = calculate_crc7(j1_frame);
-        
+
         // Prepare the frame start byte (CRC in bits 1-7, frame start indicator in bit 8)
         frame_start = (crc << 1) | 1'b1;
-        
+
         // Increment the frame counter and wrap around if necessary
         j1_frame_counter = (j1_frame_counter + 1) % J1_FRAME_LENGTH;
-        
+
         // Return the appropriate byte based on the current frame position
         if (j1_frame_counter == 0) begin
             return frame_start;
@@ -90,7 +91,7 @@ class VC4;
     function byte calculate_crc7(byte data[J1_FRAME_LENGTH]);
         bit [6:0] crc = 7'h7F;
         bit [7:0] current_byte;
-        
+
         for (int i = 0; i < J1_FRAME_LENGTH; i++) begin
             current_byte = data[i];
             for (int j = 0; j < 8; j++) begin
@@ -102,7 +103,7 @@ class VC4;
                 current_byte = current_byte << 1;
             end
         end
-        
+
         return byte'(crc);
     endfunction
 
@@ -196,5 +197,4 @@ class VC4;
             end
         end
     endfunction
-
 endclass
