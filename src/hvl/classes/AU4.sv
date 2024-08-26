@@ -1,9 +1,9 @@
 class AU4;
     VC4 vc4;
-    rand bit [15:0] h1h2; // H1 and H2 bytes of the AU pointer
-    rand bit [7:0] h3;    // H3 byte of the AU pointer
-    bit [7:0] aup[3];     // Administrative Unit Pointer
-
+    rand bit [15:0] h1h2;  // H1 and H2 bytes of the AU pointer
+    rand bit [7:0] h3;     // H3 byte of the AU pointer
+    bit [7:0] aup[3];      // Administrative Unit Pointer
+    
     // Pointer-related variables
     int pointer_value;
     bit new_data_flag;
@@ -14,6 +14,11 @@ class AU4;
     localparam bit [7:0] FIXED_STUFF_BYTE = 8'h00;
     localparam bit [7:0] POSITIVE_STUFF_OPPORTUNITY = 8'hB8;
     localparam bit [7:0] NEGATIVE_STUFF_OPPORTUNITY = 8'hC5;
+
+    constraint h1h2_format {
+        h1h2[15:12] == 4'b1010;  // Fixed pattern for H1
+        h1h2[13:11] != 3'b111;   // Invalid combination
+    }
 
     function new();
         vc4 = new();
@@ -34,14 +39,14 @@ class AU4;
 
     function void calculate_aup();
         // Calculate the AU pointer based on G.707
-        pointer_value = h1h2 & 16'h03FF; // Extract 10-bit pointer value
-        new_data_flag = h1h2[10];
+        pointer_value = h1h2 & 16'h03FF;  // Extract 10-bit pointer value
+        new_data_flag = (h1h2[15:12] == 4'b0110);  // NDF is 0110 when active
         increment_flag = h1h2[11];
         decrement_flag = h1h2[12];
 
         // Construct H1 and H2 bytes
-        aup[0] = {1'b1, 1'b0, 1'b1, 1'b0, 1'b1, 1'b1, h1h2[9:8]}; // H1
-        aup[1] = h1h2[7:0];                                       // H2
+        aup[0] = h1h2[15:8];  // H1
+        aup[1] = h1h2[7:0];   // H2
 
         // Construct H3 byte based on pointer adjustment
         if (increment_flag) begin
@@ -49,14 +54,13 @@ class AU4;
         end else if (decrement_flag) begin
             aup[2] = NEGATIVE_STUFF_OPPORTUNITY;
         end else begin
-            aup[2] = h3; // Normal operation
+            aup[2] = h3;  // Normal operation
         end
 
-        $display("AU4: Pointer Value: %0d, New Data Flag: %b, Increment: %b, Decrement: %b",
+        $display("AU4: Pointer Value: %0d, New Data Flag: %b, Increment: %b, Decrement: %b", 
                  pointer_value, new_data_flag, increment_flag, decrement_flag);
     endfunction
 
-    // Function to display the Administrative Unit Pointer
     function void display_aup();
         $display("AU4: Administrative Unit Pointer");
         for (int i = 0; i < 3; i++) begin
@@ -64,7 +68,6 @@ class AU4;
         end
     endfunction
 
-    // Function to generate the AU-4 frame with pointer justification
     function bit [261*9*8-1:0] get_au4_frame();
         bit [261*9*8-1:0] frame;
         int adjusted_pointer = pointer_value;
@@ -86,7 +89,7 @@ class AU4;
         for (int i = 0; i < 261*9; i++) begin
             int row = i / 261;
             int col = i % 261;
-
+            
             if (col == stuff_column) begin
                 if (increment_flag && row == 0) begin
                     frame[261*9*8-24-1 - i*8 -: 8] = POSITIVE_STUFF_OPPORTUNITY;
@@ -98,7 +101,12 @@ class AU4;
             end else begin
                 int adjusted_index = (i + adjusted_pointer) % (261*9);
                 if (adjusted_index < 260*9) begin
-                    frame[261*9*8-24-1 - i*8 -: 8] = vc4.c4.data[adjusted_index / 260][adjusted_index % 260];
+                    if (col == 0 && row < 9) begin
+                        // Insert VC-4 POH
+                        frame[261*9*8-24-1 - i*8 -: 8] = vc4.poh[row];
+                    end else begin
+                        frame[261*9*8-24-1 - i*8 -: 8] = vc4.c4.data[adjusted_index / 260][adjusted_index % 260];
+                    end
                 end else begin
                     frame[261*9*8-24-1 - i*8 -: 8] = FIXED_STUFF_BYTE;
                 end
@@ -108,19 +116,24 @@ class AU4;
         return frame;
     endfunction
 
-    // Function to simulate pointer adjustments over time
+    function bit is_valid_pointer();
+        return (pointer_value >= 0 && pointer_value <= 782);
+    endfunction
+
     function void simulate_pointer_adjustment();
         // Randomly decide whether to adjust the pointer
-        if ($urandom_range(100) < 5) begin // 5% chance of adjustment
-            if ($urandom_range(1) == 0) begin
+        if ($urandom_range(100) < 5) begin  // 5% chance of adjustment
+            if ($urandom_range(1) == 0 && pointer_value < 782) begin
                 // Positive justification
                 increment_flag = 1;
                 decrement_flag = 0;
+                pointer_value = (pointer_value + 1) % 783;
                 $display("AU4: Positive justification");
-            end else begin
+            end else if (pointer_value > 0) begin
                 // Negative justification
                 increment_flag = 0;
                 decrement_flag = 1;
+                pointer_value = (pointer_value - 1 + 783) % 783;
                 $display("AU4: Negative justification");
             end
         end else begin
@@ -128,7 +141,10 @@ class AU4;
             increment_flag = 0;
             decrement_flag = 0;
         end
-
+        
+        // Update h1h2 based on the new pointer value
+        h1h2 = {4'b1010, increment_flag, decrement_flag, 1'b0, pointer_value[9:0]};
+        
         calculate_aup();
     endfunction
 endclass
