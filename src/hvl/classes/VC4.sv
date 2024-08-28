@@ -4,10 +4,10 @@ import C4::*;
 class VC4;
     C4 c4;
     rand bit [Byte_Num-1:0] poh[c4_Width]; // Path Overhead
-    byte J1, B3, C2, G1, F2, H4, F3, K3, N1;
+    bit[7:0] J1, B3, C2, G1, F2, H4, F3, K3, N1;
 
     // J1 trace variables
-    const string J1_TRACE_MESSAGE = "PARMAN_________";
+    string J1_TRACE_MESSAGE = "PARMAN_________";
     const int J1_FRAME_LENGTH = 16;
     byte j1_frame[J1_FRAME_LENGTH];
     int j1_frame_counter;
