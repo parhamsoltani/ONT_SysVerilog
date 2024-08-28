@@ -5,15 +5,16 @@ class AU4;
     bit [7:0] aup[3];      // Administrative Unit Pointer
     
     // Pointer-related variables
-    int pointer_value;
-    bit new_data_flag;
-    bit increment_flag;
-    bit decrement_flag;
+    int pointer_value; // inidcates the start of the VC-4 payload within AU-4 frame, which ranges between 0 to 782.
+    bit new_data_flag; // indicates whether new data is being pointed to.
+    bit increment_flag; // set where an extra byte is added due to clock ppm.
+    bit decrement_flag; // set where a byte is removed due to clock ppm and timing differences.
 
     // Stuff bytes
-    localparam bit [7:0] FIXED_STUFF_BYTE = 8'h00;
-    localparam bit [7:0] POSITIVE_STUFF_OPPORTUNITY = 8'hB8;
-    localparam bit [7:0] NEGATIVE_STUFF_OPPORTUNITY = 8'hC5;
+    // Constant values are specific to the SDH to maintain bit patterns in the data stream, helping with clock recovery and frame alignment in the physical layer.
+    localparam bit [7:0] FIXED_STUFF_BYTE = 8'h00; // fill unused space in the frame.
+    localparam bit [7:0] POSITIVE_STUFF_OPPORTUNITY = 8'hB8;     // used when adding an extra byte.
+    localparam bit [7:0] NEGATIVE_STUFF_OPPORTUNITY = 8'hC5;    //  used when removing a byte.
 
     constraint h1h2_format {
         h1h2[15:12] == 4'b1010;  // Fixed pattern for H1
@@ -38,9 +39,9 @@ class AU4;
     endfunction
 
     function void calculate_aup();
-        // Calculate the AU pointer based on G.707
-        pointer_value = h1h2 & 16'h03FF;  // Extract 10-bit pointer value
-        new_data_flag = (h1h2[15:12] == 4'b0110);  // NDF is 0110 when active
+        // Calculate the AU pointer based on ITU-T G.707 
+        pointer_value = h1h2 & 16'h03FF;  // Extract 10-bit offset by masking the upper 6-bits (3FF --> 1023)
+        new_data_flag = (h1h2[15:12] == 4'b0110);  // NDF is 0110 when active ,indicating new data. 1001 when inactive indicating normal operation.
         increment_flag = h1h2[11];
         decrement_flag = h1h2[12];
 
