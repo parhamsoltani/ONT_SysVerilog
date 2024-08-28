@@ -33,6 +33,13 @@ class VC4;
         end
     endfunction
 
+    // New function to update J1 trace message
+    // Usage:     vc4_instance.update_j1_trace_message("NEW_MESSAGE____");
+    function void update_j1_trace_message(string new_message);
+        J1_TRACE_MESSAGE = new_message;
+        init_j1_frame();
+    endfunction
+
     function void pre_randomize();
         if (!c4.randomize()) begin
             $display("VC4: C4 randomization failed");
@@ -170,9 +177,28 @@ class VC4;
     endfunction
 
     function void insert_poh();
-        for (int i = 0; i < 9; i++) begin
-            c4.data[i][0] = poh[i];
+        // Create a new array with increased width
+        bit [Byte_Num-1:0] new_data[c4_Width][261];
+
+        // Copy existing data
+        for (int i = 0; i < c4_Width; i++) begin
+            for (int j = 0; j < 260; j++) begin
+                new_data[i][j] = c4.data[i][j];
+            end
         end
+
+        // Add POH as the last column
+        for (int i = 0; i < 9; i++) begin
+            new_data[i][260] = poh[i];
+        end
+
+        // Fill the rest of the new column with zeros
+        for (int i = 9; i < c4_Width; i++) begin
+            new_data[i][260] = 8'h00;
+        end
+
+        // Update c4.data with the new array
+        c4.data = new_data;
     endfunction
 
     function void display_poh();
@@ -182,12 +208,12 @@ class VC4;
         end
     endfunction
 
-    // New function to set C2 value
+    // Function to set C2 value
     function void set_c2_value(byte value);
         c2_value = value;
     endfunction
 
-    // New function to update previous VC-4 data
+    // Function to update previous VC-4 data
     function void update_previous_vc4_data();
         previous_vc4_data = new[c4.data.size() * c4.data[0].size()];
         int index = 0;
