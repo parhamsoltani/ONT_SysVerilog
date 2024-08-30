@@ -1,11 +1,11 @@
 class AU4;
     VC4 vc4;
-    rand bit [15:0] h1h2;  // H1 and H2 bytes of the AU pointer
-    rand bit [7:0] h3;     // H3 byte of the AU pointer
-    bit [7:0] aup[3];      // Administrative Unit Pointer
-    
+    rand bit [15:0] h1h2; // H1 and H2 bytes of the AU pointer
+    rand bit [7:0] h3; // H3 byte of the AU pointer
+    bit [7:0] aup[3]; // Administrative Unit Pointer
+
     // Pointer-related variables
-    int pointer_value; // inidcates the start of the VC-4 payload within AU-4 frame, which ranges between 0 to 782.
+    int pointer_value; // indicates the start of the VC-4 payload within AU-4 frame, which ranges between 0 to 782.
     bit new_data_flag; // indicates whether new data is being pointed to.
     bit increment_flag; // set where an extra byte is added due to clock ppm.
     bit decrement_flag; // set where a byte is removed due to clock ppm and timing differences.
@@ -106,7 +106,9 @@ class AU4;
                         // Insert VC-4 POH
                         frame[261*9*8-24-1 - i*8 -: 8] = vc4.poh[row];
                     end else begin
-                        frame[261*9*8-24-1 - i*8 -: 8] = vc4.c4.data[adjusted_index / 260][adjusted_index % 260];
+                        // Use the new index_2Dto1D function to get the correct 1D index
+                        int c4_index = vc4.c4.index_2Dto1D(adjusted_index / 260, adjusted_index % 260);
+                        frame[261*9*8-24-1 - i*8 -: 8] = vc4.c4.data[c4_index];
                     end
                 end else begin
                     frame[261*9*8-24-1 - i*8 -: 8] = FIXED_STUFF_BYTE;

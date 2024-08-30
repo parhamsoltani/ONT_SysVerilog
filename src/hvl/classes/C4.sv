@@ -11,6 +11,10 @@ class C4;
         $display ("This will be called just after randomization");
     endfunction
 
+    function int index_2Dto1D(input int row, column);
+        return row * c4_Width + column;
+    endfunction
+
     function c4_index_fixed_array2_t location_1Dto2D (input int index_a,Length_total);
         automatic int lenght_a = (index_a) % Length_total;
         automatic int width_a = (index_a+1) / Length_total;
