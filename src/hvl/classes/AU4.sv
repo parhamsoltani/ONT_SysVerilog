@@ -1,3 +1,6 @@
+import param_pkg::*;
+import class_pkg::*;
+
 class AU4;
     VC4 vc4;
     rand bit [15:0] h1h2; // H1 and H2 bytes of the AU pointer
