@@ -109,9 +109,7 @@ class AU4;
                         // Insert VC-4 POH
                         frame[261*9*8-24-1 - i*8 -: 8] = vc4.poh[row];
                     end else begin
-                        // Use the new index_2Dto1D function to get the correct 1D index
-                        int c4_index = vc4.c4.index_2Dto1D(adjusted_index / 260, adjusted_index % 260);
-                        frame[261*9*8-24-1 - i*8 -: 8] = vc4.c4.data[c4_index];
+                        frame[261*9*8-24-1 - i*8 -: 8] = vc4.c4.data[adjusted_index / 260][adjusted_index % 260];
                     end
                 end else begin
                     frame[261*9*8-24-1 - i*8 -: 8] = FIXED_STUFF_BYTE;

@@ -8,7 +8,7 @@ class VC4;
 
     // J1 trace variables
     string J1_TRACE_MESSAGE = "PARMAN_________";
-    const int J1_FRAME_LENGTH = 16;
+    localparam int J1_FRAME_LENGTH = 16;
     byte j1_frame[J1_FRAME_LENGTH];
     int j1_frame_counter;
 

@@ -5,7 +5,7 @@ package param_pkg;
 
 
     // C4 params & typedefs    
-    parameter c4_Lenght = 260,
+    parameter c4_Length = 260,
               c4_Width = 9, 
               Byte_Num = 8;
 

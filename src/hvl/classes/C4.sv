@@ -2,7 +2,7 @@ import param_pkg::*;
 import class_pkg::*;
 
 class C4;
-    rand bit [c4_Lenght*c4_Width-1:0][Byte_Num-1:0] data;
+    rand bit [Byte_Num-1:0] data[c4_Width][c4_Length];
     
     function void pre_randomize ();
     //    $display ("This will be called just before randomization");
@@ -21,8 +21,5 @@ class C4;
         automatic int width_a = (index_a+1) / Length_total;
         $display("Array[%0d] --> Mat[%0d][%0d]", index_a, lenght_a, width_a);
     endfunction
-
-
-
 
 endclass
