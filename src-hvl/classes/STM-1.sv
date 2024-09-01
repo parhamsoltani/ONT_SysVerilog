@@ -12,56 +12,28 @@ class STM1;
 
 
     static bit [15:0][7:0] previous_J0_frame;
-    static bit first = 1;
+    static logic first = 1;
     static bit [3:0] counter_for_J0_frame = 0;
 
     localparam int J0_FRAME_LENGTH = 16;
     string J0_TRACE_MESSAGE = "PARMAN          ";
 
     function new();
-        au4 = new();
-
-        if(fisrt) begin
+        au4 = new(); 
+        if(this.fisrt) begin
             previous_J0_frame[15] = 8'b00000000;
-            for (i = J0_FRAME_LENGTH-2; i >= 0 ; i++) begin
+            for (int i = J0_FRAME_LENGTH-2; i >= 0 ; i--) begin
                 previous_J0_frame[i] = byte'(J0_TRACE_MESSAGE[i+1]);
             end
-            first = 0;
-        end else begin
+            this.first = 0;
+        end 
+        
+        else begin
             if(counter_for_J0_frame == 4'b0000) begin
-                previous_J0_frame[15] = crc7_sdh_j0(previous_J0_frame)
+                previous_J0_frame[15] = crc7_sdh_j0(previous_J0_frame);
             end
             counter_for_J0_frame++;
-        end
-        
-
-        A1 = calculate_A1();
-        A2 = calculate_A2();
-        C1 = calculate_C1();
-        J0 = calculate_J0();
-        B1 = calculate_B1();
-        E1 = calculate_E1();
-        F1 = calculate_F1();
-        D1 = calculate_D1();
-        D2 = calculate_D2();
-        D3 = calculate_D3();
-
-        K1 = calculate_K1();
-        K2 = calculate_K2();
-        D4 = calculate_D4();
-        D5 = calculate_D5();
-        D6 = calculate_D6();
-        D7 = calculate_D7();
-        D8 = calculate_D8();
-        D9 = calculate_D9();
-        D10 = calculate_D10();
-        D11 = calculate_D11();
-        D12 = calculate_D12();
-        S1 = calculate_S1();
-        Z1 = calculate_Z1();
-        Z2 = calculate_Z2();
-        M1 = calculate_M1();
-        E2 = calculate_E2();        
+        end 
     endfunction
 
     function void pre_randomize();
@@ -69,12 +41,39 @@ class STM1;
             $display("STM-1: AU4 randomization failed");
         end else begin
             $display("STM-1: This will be called just before randomization");
+
+            A1 = calculate_A1();
+            A2 = calculate_A2();
+            C1 = calculate_C1();
+            J0 = calculate_J0();
+            B1 = calculate_B1();
+            E1 = calculate_E1();
+            F1 = calculate_F1();
+            D1 = calculate_D1();
+            D2 = calculate_D2();
+            D3 = calculate_D3();
+
+            K1 = calculate_K1();
+            K2 = calculate_K2();
+            D4 = calculate_D4();
+            D5 = calculate_D5();
+            D6 = calculate_D6();
+            D7 = calculate_D7();
+            D8 = calculate_D8();
+            D9 = calculate_D9();
+            D10 = calculate_D10();
+            D11 = calculate_D11();
+            D12 = calculate_D12();
+            S1 = calculate_S1();
+            Z1 = calculate_Z1();
+            Z2 = calculate_Z2();
+            M1 = calculate_M1();
+            E2 = calculate_E2();      
         end
     endfunction
 
     function void post_randomize();
         $display("STM-1: This will be called just after randomization");
-        calculate_aup();
     endfunction
 
     function void calculate_soh();
@@ -194,11 +193,11 @@ class STM1;
                         7 : frame[i][j] = 8'b0;
                         8 : frame[i][j] = 8'b0;
                         default: frame[i][j] = 8'b0;
-                    endcase
+                    endcase 
                     default: frame[i][j] = 8'b0;
                 endcase
             end else begin
-                frame[i][j] = au4.vc4.c4.data[(i*c4_Lenght)+(j-9)];
+                frame[i][j] = au4.vc4.data[(i*vc4_Length)+(j-9)];
             end
             frame = this.frame;
             
@@ -216,9 +215,9 @@ class STM1;
         return 8'h28;
     endfunction
 
-    // function bit [7:0] calculate_C1();
-    //     ...
-    // endfunction
+    function bit [7:0] calculate_C1();
+        return 0;
+    endfunction
     
     function bit [7:0] calculate_J0();
         bit [7:0] calculated_J0;
@@ -245,7 +244,7 @@ class STM1;
 
     function bit [7:0] calculate_B1();
         previous_B1 = 8'b0;
-        for (int i = 0; i < STM1_Length*STM1_Width*Byte_Num ; i++) begin
+        for (int i = 0; i < STM1_Length*STM1_Width; i++) begin
             previous_B1 = previous_B1 ^ frame[i];
         end
         return previous_B1;
@@ -278,7 +277,7 @@ class STM1;
 
     function bit [7:0] calculate_B2();
         previous_B2 = 24'h0;
-        for (int i = 0; i < STM1_Length*STM1_Width*Byte_Num ; i+=3 ) begin
+        for (int i = 0; i < STM1_Length*STM1_Width ; i+=3 ) begin
             previous_B2 = previous_B2 ^ {frame[i],frame[i+1],frame[i+2]};
         end
         return previous_B2;
@@ -372,30 +371,28 @@ class STM1;
         bit [127:0] data;
         integer i, j;
 
-        always @(*) begin
-            // Initialize the CRC value
-            crc = 8'h00;
-            data = data_in;
+        // Initialize the CRC value
+        crc = 8'h00;
+        data = data_in;
 
-            // CRC calculation loop
-            for (i = 0; i < 16; i++) begin
-                crc ^= data[127:120];  // XOR the next byte into the CRC
-                data = data << 8;      // Shift data left by 1 byte (8 bits)
-                
-                // Bitwise operations on each byte
-                for (j = 0; j < 8; j++) begin
-                    if (crc[7] == 1'b1) begin
-                        crc = (crc << 1) ^ 8'h89; // Shift left and XOR with polynomial
-                    end else begin
-                        crc = crc << 1;  // Just shift left
-                    end
+        // CRC calculation loop
+        for (i = 0; i < 16; i++) begin
+            crc ^= data[127:120];  // XOR the next byte into the CRC
+            data = data << 8;      // Shift data left by 1 byte (8 bits)
+            
+            // Bitwise operations on each byte
+            for (j = 0; j < 8; j++) begin
+                if (crc[7] == 1'b1) begin
+                    crc = (crc << 1) ^ 8'h89; // Shift left and XOR with polynomial
+                end else begin
+                    crc = crc << 1;  // Just shift left
                 end
             end
-
-            // Assign the top 7 bits of the CRC register to the output
-            crc_out = {1'b1,crc[7:1]};
-            return crc_out;
         end
+
+        // Assign the top 7 bits of the CRC register to the output
+        crc_out = {1'b1,crc[7:1]};
+        return crc_out;
     endfunction
 
 
