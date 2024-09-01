@@ -1,9 +1,9 @@
 import param_pkg::*;
 import class_pkg::*;
 
-class STM_1;
+class STM1;
     AU4 au4;
-    bit [STM1_Width-1:0][STM1_Lenght-1:0][Byte_Num-1:0] frame;
+    bit [STM1_Width-1:0][STM1_Length-1:0][Byte_Num-1:0] frame;
     bit [7:0] A1, A2, C1, J0, B1, E1, F1, D1, D2, D3;
     bit [7:0] K1, K2, D4, D5, D6, D7, D8, D9, D10, D11, D12, S1, Z1, Z2, M1, E2;
     bit [23:0] B2;
@@ -15,19 +15,16 @@ class STM_1;
     static bit first = 1;
     static bit [3:0] counter_for_J0_frame = 0;
 
+    localparam int J0_FRAME_LENGTH = 16;
+    string J0_TRACE_MESSAGE = "PARMAN          ";
+
     function new();
         au4 = new();
 
         if(fisrt) begin
             previous_J0_frame[15] = 8'b00000000;
-            previous_J0_frame[14] = P_letter;
-            previous_J0_frame[13] = A_letter;
-            previous_J0_frame[12] = R_letter;
-            previous_J0_frame[11] = M_letter;
-            previous_J0_frame[10] = A_letter;
-            previous_J0_frame[9] = N_letter;
-            for (int i = 8 ; i <= 0 ; i--) begin
-                previous_J0_frame[i] = SPACE_letter;
+            for (i = J0_FRAME_LENGTH-2; i >= 0 ; i++) begin
+                previous_J0_frame[i] = byte'(J0_TRACE_MESSAGE[i+1]);
             end
             first = 0;
         end else begin
@@ -84,10 +81,10 @@ class STM_1;
 
     endfunction
     
-    function bit [STM1_Width-1:0][STM1_Lenght-1:0][Byte_Num-1:0]  get_stm_frame();
-        bit [STM1_Width-1:0][STM1_Lenght-1:0][Byte_Num-1:0]  frame;
+    function bit [STM1_Width-1:0][STM1_Length-1:0][Byte_Num-1:0]  get_stm_frame();
+        bit [STM1_Width-1:0][STM1_Length-1:0][Byte_Num-1:0]  frame;
         for (int i = 0; i < STM1_Width ; i++) begin
-            for (int j = 0; j < STM1_Lenght ; j++) begin
+            for (int j = 0; j < STM1_Length ; j++) begin
                 if(j < 9) begin
                 case (j)
                     0 : case (i)
@@ -198,7 +195,7 @@ class STM_1;
                         8 : frame[i][j] = 8'b0;
                         default: frame[i][j] = 8'b0;
                     endcase
-                    default: default: frame[i][j] = 0;
+                    default: frame[i][j] = 8'b0;
                 endcase
             end else begin
                 frame[i][j] = au4.vc4.c4.data[(i*c4_Lenght)+(j-9)];
@@ -224,30 +221,31 @@ class STM_1;
     // endfunction
     
     function bit [7:0] calculate_J0();
+        bit [7:0] calculated_J0;
         case (counter_for_J0_frame)
-            0 : previous_J0_frame[15];
-            1 : previous_J0_frame[14];
-            2 : previous_J0_frame[13];
-            3 : previous_J0_frame[12];
-            4 : previous_J0_frame[11];
-            5 : previous_J0_frame[10];
-            6 : previous_J0_frame[9];
-            7 : previous_J0_frame[8];
-            8 : previous_J0_frame[7];
-            9 : previous_J0_frame[6];
-            10 : previous_J0_frame[5];
-            11 : previous_J0_frame[4];
-            12 : previous_J0_frame[3];
-            13 : previous_J0_frame[2];
-            14 : previous_J0_frame[1];
-            15 : previous_J0_frame[0];
-            default: 8'b0;
+            0 : calculated_J0 = previous_J0_frame[15];
+            1 : calculated_J0 = previous_J0_frame[14];
+            2 : calculated_J0 = previous_J0_frame[13];
+            3 : calculated_J0 = previous_J0_frame[12];
+            4 : calculated_J0 = previous_J0_frame[11];
+            5 : calculated_J0 = previous_J0_frame[10];
+            6 : calculated_J0 = previous_J0_frame[9];
+            7 : calculated_J0 = previous_J0_frame[8];
+            8 : calculated_J0 = previous_J0_frame[7];
+            9 : calculated_J0 = previous_J0_frame[6];
+            10 : calculated_J0 = previous_J0_frame[5];
+            11 : calculated_J0 = previous_J0_frame[4];
+            12 : calculated_J0 = previous_J0_frame[3];
+            13 : calculated_J0 = previous_J0_frame[2];
+            14 : calculated_J0 = previous_J0_frame[1];
+            15 : calculated_J0 = previous_J0_frame[0];
+            default: calculated_J0 = 8'b0;
         endcase
     endfunction
 
     function bit [7:0] calculate_B1();
         previous_B1 = 8'b0;
-        for (int i = 0; i < STM1_Lenght*STM1_Width*Byte_Num ; i++) begin
+        for (int i = 0; i < STM1_Length*STM1_Width*Byte_Num ; i++) begin
             previous_B1 = previous_B1 ^ frame[i];
         end
         return previous_B1;
@@ -280,7 +278,7 @@ class STM_1;
 
     function bit [7:0] calculate_B2();
         previous_B2 = 24'h0;
-        for (int i = 0; i < STM1_Lenght*STM1_Width*Byte_Num ; i+=3 ) begin
+        for (int i = 0; i < STM1_Length*STM1_Width*Byte_Num ; i+=3 ) begin
             previous_B2 = previous_B2 ^ {frame[i],frame[i+1],frame[i+2]};
         end
         return previous_B2;
@@ -366,15 +364,15 @@ class STM_1;
         return 8'b0;
     endfunction
 
-    function bit [7:0] crc7_sdh_j0 (
-        input  bit [127:0] data_in, // 16 bytes (128 bits) input data
-        );
-        bit [7:0]   crc_out
+    function bit [7:0] crc7_sdh_j0 (bit [127:0] data_in); // 16 bytes (128 bits) input data
+         
+        
+        bit [7:0]   crc_out;
         bit [7:0]  crc;
         bit [127:0] data;
         integer i, j;
 
-        always_comb begin
+        always @(*) begin
             // Initialize the CRC value
             crc = 8'h00;
             data = data_in;
@@ -396,6 +394,7 @@ class STM_1;
 
             // Assign the top 7 bits of the CRC register to the output
             crc_out = {1'b1,crc[7:1]};
+            return crc_out;
         end
     endfunction
 
