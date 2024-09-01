@@ -72,13 +72,15 @@ class AU4;
         end
     endfunction
 
-    function bit [261*9*8-1:0] get_au4_frame();
-        bit [261*9*8-1:0] frame;
+    function bit [7:0] get_au4_frame [9][261];
+        bit [7:0] frame [9][261];
         int adjusted_pointer = pointer_value;
         int stuff_column = 261;
 
         // Insert AUP
-        frame[261*9*8-1 -: 24] = {aup[0], aup[1], aup[2]};
+        frame[0][0] = aup[0];
+        frame[0][1] = aup[1];
+        frame[0][2] = aup[2];
 
         // Handle pointer adjustments
         if (increment_flag) begin
@@ -90,29 +92,30 @@ class AU4;
         end
 
         // Insert VC4 payload with pointer justification and stuff bytes
-        for (int i = 0; i < 261*9; i++) begin
-            int row = i / 261;
-            int col = i % 261;
-            
-            if (col == stuff_column) begin
-                if (increment_flag && row == 0) begin
-                    frame[261*9*8-24-1 - i*8 -: 8] = POSITIVE_STUFF_OPPORTUNITY;
-                end else if (decrement_flag && row == 0) begin
-                    frame[261*9*8-24-1 - i*8 -: 8] = NEGATIVE_STUFF_OPPORTUNITY;
-                end else begin
-                    frame[261*9*8-24-1 - i*8 -: 8] = FIXED_STUFF_BYTE;
-                end
-            end else begin
-                int adjusted_index = (i + adjusted_pointer) % (261*9);
-                if (adjusted_index < 260*9) begin
-                    if (col == 0 && row < 9) begin
-                        // Insert VC-4 POH
-                        frame[261*9*8-24-1 - i*8 -: 8] = vc4.poh[row];
+        for (int row = 0; row < 9; row++) begin
+            for (int col = 0; col < 261; col++) begin
+                int i = row * 261 + col;
+                
+                if (col == stuff_column) begin
+                    if (increment_flag && row == 0) begin
+                        frame[row][col] = POSITIVE_STUFF_OPPORTUNITY;
+                    end else if (decrement_flag && row == 0) begin
+                        frame[row][col] = NEGATIVE_STUFF_OPPORTUNITY;
                     end else begin
-                        frame[261*9*8-24-1 - i*8 -: 8] = vc4.c4.data[adjusted_index / 260][adjusted_index % 260];
+                        frame[row][col] = FIXED_STUFF_BYTE;
                     end
                 end else begin
-                    frame[261*9*8-24-1 - i*8 -: 8] = FIXED_STUFF_BYTE;
+                    int adjusted_index = (i + adjusted_pointer) % (261*9);
+                    if (adjusted_index < 260*9) begin
+                        if (col == 0 && row < 9) begin
+                            // Insert VC-4 POH
+                            frame[row][col] = vc4.poh[row];
+                        end else begin
+                            frame[row][col] = vc4.c4.data[adjusted_index / 260][adjusted_index % 260];
+                        end
+                    end else begin
+                        frame[row][col] = FIXED_STUFF_BYTE;
+                    end
                 end
             end
         end
