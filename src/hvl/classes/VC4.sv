@@ -2,7 +2,7 @@ import param_pkg::*;
 import class_pkg::*;
 
 class VC4;
-    C4 c4;
+    rand C4 c4;
     rand bit [Byte_Num-1:0] poh[c4_Width]; // Path Overhead
     bit [c4_Width-1:0][261-1:0][Byte_Num-1:0] data;
     bit[7:0] J1, B3, C2, G1, F2, H4, F3, K3, N1;
@@ -223,12 +223,12 @@ class VC4;
     function void insert_poh();
         // Create a new array with increased width
         // Add POH as the last column
-        for (int i = 0; i < 9; i++) begin
+        for (int i = 0; i < c4_Width; i++) begin
             data[i][0] = poh[i];
         end
         
 
-                // Copy existing data
+        // Copy existing data
         for (int i = 0; i < c4_Width; i++) begin
             for (int j = 1; j < 261; j++) begin
                 data[i][j] = c4.data[i][j-1];
@@ -241,7 +241,7 @@ class VC4;
 
     function void display_poh();
         $display("VC4: Path Overhead");
-        for (int i = 0; i < 9; i++) begin
+        for (int i = 0; i < c4_Width; i++) begin
             $display("POH[%0d] = 0x%0h", i, poh[i]);
         end
     endfunction
