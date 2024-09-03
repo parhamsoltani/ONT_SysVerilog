@@ -15,12 +15,6 @@ package param_pkg;
 
     // STM1 params & typedefs
     parameter STM1_Length = 270, STM1_Width = 9; 
-    parameter P_letter = 8'b01010000,
-              A_letter = 8'b01000000,
-              R_letter = 8'b01010010,
-              M_letter = 8'b01001101,
-              N_letter = 8'b01001110,
-              SPACE_letter = 8'b00100000;
 
     // CSV params & typedefs
     parameter byte C4_OUT = 0;
