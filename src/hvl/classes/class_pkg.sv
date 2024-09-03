@@ -3,4 +3,5 @@ package class_pkg;
     `include "VC4.sv"
     `include "AU4.sv"
     `include "CSV.sv"
+    `include "STM1.sv"
 endpackage

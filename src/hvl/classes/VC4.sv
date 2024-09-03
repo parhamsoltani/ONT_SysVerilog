@@ -41,13 +41,6 @@ class VC4;
         if (!c4.randomize()) begin
             $display("VC4: C4 randomization failed");
         end else begin
-            for (int i = 0; i < c4_Width; i++) begin
-                for (int j = 0; j < 260; j++) begin
-                    $display("c4[%d, %d] = %d",i,j,c4.data[i][j]);
-                end
-            end
-
-                
             $display("VC4: This will be called just before randomization");
             // Initialize Path Overhead according to ITU-T G.707
             J1 = calculate_J1();

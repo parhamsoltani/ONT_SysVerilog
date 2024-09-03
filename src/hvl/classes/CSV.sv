@@ -23,7 +23,7 @@
 
 
         // unpacked input
-        function void arr2D_write(input bit [7:0] data [][], input bit alignment, input string col_names []={}, input string row_names []={});
+        function void arr2D_write(input bit [7:0] data [][], bit alignment, string col_names []={}, string row_names []={});
             string col_names_str = "";
             string data_str = "";
 
@@ -80,7 +80,7 @@
 
 
         // unpacked input
-        function void arr1D_write(input bit [7:0] data [], input int col_size, input int row_size, input string col_names []={}, input string row_names []={});
+        function void arr1D_write(input bit [7:0] data [], int col_size, int row_size, string col_names []={}, string row_names []={});
 
             string col_names_str, line_str;
 
@@ -119,9 +119,19 @@
         // packed input
         // ============
         // Either had to make multiple exclusive functions or set the bigest size as the data size
-        function void container_write(input bit [max_col_size*max_row_size-1:0][7:0] data ,string cont_type, input string col_names []={}, input string row_names []={});
-            int row_size, col_size;
-            string line_str, col_names_str;
+        function void container_write(input bit [max_col_size*max_row_size-1:0][7:0] data ,string cont_type, bit out_b=DEC, string col_names []={}, string row_names []={});
+            int row_size;
+            int col_size;
+
+            string data_str;
+            string line_str;
+            string col_names_str;
+            string out_base = (out_b==DEC)? "%d" : "%h";
+            
+
+
+
+
 
 
             // Setting dims based on the con_type
@@ -171,12 +181,12 @@
             $fdisplay(file, col_names_str);
 
 
-
             // Writing the data
             for (int i = 0; i<row_size ; i=i+1) begin
                 line_str = (row_names.size()!=0)? row_names[i] : $sformatf("%d", i+1);
                 for (int j = 0; j<col_size ; j=j+1) begin
-                    line_str = $sformatf("%s,%d",line_str, data[i*col_size + j]); 
+                    data_str = $sformatf(out_base, data[i*col_size + j]);
+                    line_str = {line_str , "," , data_str}; 
                 end
 
                 $fdisplay(file, line_str);
