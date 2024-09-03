@@ -4,13 +4,13 @@ import class_pkg::*;
 class VC4;
     C4 c4;
     rand bit [Byte_Num-1:0] poh[c4_Width]; // Path Overhead
-    bit [c4_Width-1:0][261-1:0][Byte_Num-1:0] data;
+    bit [vc4_Width-1:0][vc4_Length-1:0][Byte_Num-1:0] data;
     bit[7:0] J1, B3, C2, G1, F2, H4, F3, K3, N1;
 
     // J1 trace variables
     localparam int J1_FRAME_LENGTH = 16;
     byte j1_frame[J1_FRAME_LENGTH];
-    static int j1_frame_counter;
+    static int j1_frame_counter = 0;
 
     // B3 related variable
     static bit[7:0] previous_frame_xor;
@@ -31,7 +31,7 @@ class VC4;
 
     function new();
         c4 = new();
-        j1_frame_counter = 0;
+        j1_frame_counter;
         init_j1_frame();
         previous_frame_xor = 8'h00;
     endfunction
@@ -197,9 +197,9 @@ class VC4;
 
     function void update_previous_frame_xor();
         bit[7:0] current_frame_xor = 8'h00;
-        for (int i = 0; i < c4_Width; i++) begin
-            for (int j = 0; j < c4_Length; j++) begin
-                current_frame_xor ^= c4.data[i][j];
+        for (int i = 0; i < vc4_Width; i++) begin
+            for (int j = 0; j < vc4_Length; j++) begin
+                current_frame_xor ^= data[i][j];
             end
         end
         previous_frame_xor = current_frame_xor;
