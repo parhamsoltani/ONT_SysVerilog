@@ -28,11 +28,7 @@ package param_pkg;
     parameter bit HEX = 0;
     parameter bit DEC = 1;
     parameter bit TRANSLATE_OFF = 0;
-    parameter bit TRANSLATE_ON = 1;
-
-
-
-    
+    parameter bit TRANSLATE_ON = 1;    
 
 
 endpackage

@@ -1,15 +1,16 @@
 import param_pkg::*;
 import class_pkg::*;
 
+
 class C4;
-    rand bit [Byte_Num-1:0] data[c4_Width][c4_Length];
-    
+    rand bit [c4_Width-1:0][c4_Length-1:0][Byte_Num-1:0] data;
+
     function void pre_randomize ();
-    //    $display ("This will be called just before randomization");
+        //$display ("This will be called just before randomization");
     endfunction
 
     function void post_randomize ();
-    //    $display ("This will be called just after randomization");
+        //$display ("This will be called just after randomization");
     endfunction
 
     function int index_2Dto1D(input int row, column);
