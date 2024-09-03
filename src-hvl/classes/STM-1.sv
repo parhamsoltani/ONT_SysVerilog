@@ -2,38 +2,55 @@ import param_pkg::*;
 import class_pkg::*;
 
 class STM1;
-    AU4 au4;
+    rand AU4 au4;
+    // STM-1 full frame
     bit [STM1_Width-1:0][STM1_Length-1:0][Byte_Num-1:0] frame;
-    bit [7:0] A1, A2, C1, J0, B1, E1, F1, D1, D2, D3;
-    bit [7:0] K1, K2, D4, D5, D6, D7, D8, D9, D10, D11, D12, S1, Z1, Z2, M1, E2;
+    // RSOH
+    bit [7:0] A1;
+    bit [7:0] A2;
+    bit [7:0] C1;
+    bit [7:0] J0;
+    bit [7:0] B1;
+    bit [7:0] E1;
+    bit [7:0] F1;
+    bit [7:0] D1;
+    bit [7:0] D2;
+    bit [7:0] D3;
+    // MSOH
     bit [23:0] B2;
+    bit [7:0] K1;
+    bit [7:0] K2;
+    bit [7:0] D4;
+    bit [7:0] D5;
+    bit [7:0] D6;
+    bit [7:0] D7;
+    bit [7:0] D8;
+    bit [7:0] D9;
+    bit [7:0] D10;
+    bit [7:0] D11;
+    bit [7:0] D12;
+    bit [7:0] S1;
+    bit [7:0] Z1;
+    bit [7:0] Z2;
+    bit [7:0] M1;
+    bit [7:0] E2;
+
+    // extra variables
     bit [7:0] previous_B1;
     bit [23:0] previous_B2;
-
-
-    static bit [15:0][7:0] previous_J0_frame;
-    static logic first = 1;
-    static bit [3:0] counter_for_J0_frame = 0;
-
+    
+    // J0 parametere
     localparam int J0_FRAME_LENGTH = 16;
-    string J0_TRACE_MESSAGE = "PARMAN          ";
+    string J0_TRACE_MESSAGE = "PARMAN";
+    static byte  j0_frame [0:J0_FRAME_LENGTH-1];
+    static bit [3:0] j0_frame_counter = 0;
+
+    rand bit [8:0][269:0][7:0] f;
 
     function new();
         au4 = new(); 
-        if(this.fisrt) begin
-            previous_J0_frame[15] = 8'b00000000;
-            for (int i = J0_FRAME_LENGTH-2; i >= 0 ; i--) begin
-                previous_J0_frame[i] = byte'(J0_TRACE_MESSAGE[i+1]);
-            end
-            this.first = 0;
-        end 
+        j0_frame_counter = 0;
         
-        else begin
-            if(counter_for_J0_frame == 4'b0000) begin
-                previous_J0_frame[15] = crc7_sdh_j0(previous_J0_frame);
-            end
-            counter_for_J0_frame++;
-        end 
     endfunction
 
     function void pre_randomize();
@@ -41,11 +58,13 @@ class STM1;
             $display("STM-1: AU4 randomization failed");
         end else begin
             $display("STM-1: This will be called just before randomization");
+            init_j0_frame();
 
             A1 = calculate_A1();
             A2 = calculate_A2();
             C1 = calculate_C1();
             J0 = calculate_J0();
+            j0_frame_counter++;
             B1 = calculate_B1();
             E1 = calculate_E1();
             F1 = calculate_F1();
@@ -81,12 +100,11 @@ class STM1;
     endfunction
     
     function bit [STM1_Width-1:0][STM1_Length-1:0][Byte_Num-1:0]  get_stm_frame();
-        bit [STM1_Width-1:0][STM1_Length-1:0][Byte_Num-1:0]  frame;
         for (int i = 0; i < STM1_Width ; i++) begin
             for (int j = 0; j < STM1_Length ; j++) begin
                 if(j < 9) begin
-                case (j)
-                    0 : case (i)
+                case (i)
+                    0 : case (j)
                         0 : frame[i][j] = A1;
                         1 : frame[i][j] = A1;
                         2 : frame[i][j] = A1;
@@ -98,7 +116,7 @@ class STM1;
                         8 : frame[i][j] = 8'b0;
                         default: frame[i][j] = 8'b0;
                     endcase
-                    1 : case (i)
+                    1 : case (j)
                         0 : frame[i][j] = B1;
                         1 : frame[i][j] = 8'b0;
                         2 : frame[i][j] = 8'b0;
@@ -110,7 +128,7 @@ class STM1;
                         8 : frame[i][j] = 8'b0;
                         default: frame[i][j] = 8'b0;
                     endcase
-                    2 : case (i)
+                    2 : case (j)
                         0 : frame[i][j] = D1;
                         1 : frame[i][j] = 8'b0;
                         2 : frame[i][j] = 8'b0;
@@ -122,7 +140,7 @@ class STM1;
                         8 : frame[i][j] = 8'b0;
                         default: frame[i][j] = 8'b0;
                     endcase
-                    3 : case (i)
+                    3 : case (j)
                         0 : frame[i][j] = au4.aup[0];
                         1 : frame[i][j] = 8'b0;
                         2 : frame[i][j] = 8'b0;
@@ -134,7 +152,7 @@ class STM1;
                         8 : frame[i][j] = au4.aup[2];
                         default: frame[i][j] = 8'b0;
                     endcase
-                    4 : case (i)
+                    4 : case (j)
                         0 : frame[i][j] = B2;
                         1 : frame[i][j] = B2;
                         2 : frame[i][j] = B2;
@@ -146,7 +164,7 @@ class STM1;
                         8 : frame[i][j] = 8'b0;
                         default: frame[i][j] = 8'b0;
                     endcase
-                    5 : case (i)
+                    5 : case (j)
                         0 : frame[i][j] = D4;
                         1 : frame[i][j] = 8'b0;
                         2 : frame[i][j] = 8'b0;
@@ -158,7 +176,7 @@ class STM1;
                         8 : frame[i][j] = 8'b0;
                         default: frame[i][j] = 8'b0;
                     endcase
-                    6 : case (i)
+                    6 : case (j)
                         0 : frame[i][j] = D7;
                         1 : frame[i][j] = 8'b0;
                         2 : frame[i][j] = 8'b0;
@@ -170,7 +188,7 @@ class STM1;
                         8 : frame[i][j] = 8'b0;
                         default: frame[i][j] = 8'b0;
                     endcase
-                    7 : case (i)
+                    7 : case (j)
                         0 : frame[i][j] = D10;
                         1 : frame[i][j] = 8'b0;
                         2 : frame[i][j] = 8'b0;
@@ -182,7 +200,7 @@ class STM1;
                         8 : frame[i][j] = 8'b0;
                         default: frame[i][j] = 8'b0;
                     endcase
-                    8 : case (i)
+                    8 : case (j)
                         0 : frame[i][j] = S1;
                         1 : frame[i][j] = Z1;
                         2 : frame[i][j] = Z1;
@@ -196,10 +214,11 @@ class STM1;
                     endcase 
                     default: frame[i][j] = 8'b0;
                 endcase
+                $display("data[%d][%d] = %d",i,j,frame[i][j]);
             end else begin
-                frame[i][j] = au4.vc4.data[(i*vc4_Length)+(j-9)];
+                frame[i][j] = au4.vc4.data[i][j-9];
+                $display("data[%d][%d] = %d",i,j,frame[i][j]);
             end
-            frame = this.frame;
             
             end
         end
@@ -220,25 +239,24 @@ class STM1;
     endfunction
     
     function bit [7:0] calculate_J0();
-        bit [7:0] calculated_J0;
-        case (counter_for_J0_frame)
-            0 : calculated_J0 = previous_J0_frame[15];
-            1 : calculated_J0 = previous_J0_frame[14];
-            2 : calculated_J0 = previous_J0_frame[13];
-            3 : calculated_J0 = previous_J0_frame[12];
-            4 : calculated_J0 = previous_J0_frame[11];
-            5 : calculated_J0 = previous_J0_frame[10];
-            6 : calculated_J0 = previous_J0_frame[9];
-            7 : calculated_J0 = previous_J0_frame[8];
-            8 : calculated_J0 = previous_J0_frame[7];
-            9 : calculated_J0 = previous_J0_frame[6];
-            10 : calculated_J0 = previous_J0_frame[5];
-            11 : calculated_J0 = previous_J0_frame[4];
-            12 : calculated_J0 = previous_J0_frame[3];
-            13 : calculated_J0 = previous_J0_frame[2];
-            14 : calculated_J0 = previous_J0_frame[1];
-            15 : calculated_J0 = previous_J0_frame[0];
-            default: calculated_J0 = 8'b0;
+        case (j0_frame_counter)
+            0 : return j0_frame[0];
+            1 : return j0_frame[1];
+            2 : return j0_frame[2];
+            3 : return j0_frame[3];
+            4 : return j0_frame[4];
+            5 : return j0_frame[5];
+            6 : return j0_frame[6];
+            7 : return j0_frame[7];
+            8 : return j0_frame[8];
+            9 : return j0_frame[9];
+            10 : return j0_frame[10];
+            11 : return j0_frame[11];
+            12 : return j0_frame[12];
+            13 : return j0_frame[13];
+            14 : return j0_frame[14];
+            15 : return j0_frame[15];
+            default: return 8'b0;
         endcase
     endfunction
 
@@ -363,37 +381,53 @@ class STM1;
         return 8'b0;
     endfunction
 
-    function bit [7:0] crc7_sdh_j0 (bit [127:0] data_in); // 16 bytes (128 bits) input data
-         
-        
-        bit [7:0]   crc_out;
-        bit [7:0]  crc;
-        bit [127:0] data;
+    function bit [6:0] crc7_calculate (
+        input byte data [0:J0_FRAME_LENGTH-2]  // 15-byte array input
+    );
+        bit [7:0] crc;
+        bit [7:0] byte1;
         integer i, j;
 
-        // Initialize the CRC value
-        crc = 8'h00;
-        data = data_in;
+        begin
+            crc = 8'h00;  // Initialize CRC to 0
 
-        // CRC calculation loop
-        for (i = 0; i < 16; i++) begin
-            crc ^= data[127:120];  // XOR the next byte into the CRC
-            data = data << 8;      // Shift data left by 1 byte (8 bits)
-            
-            // Bitwise operations on each byte
-            for (j = 0; j < 8; j++) begin
-                if (crc[7] == 1'b1) begin
-                    crc = (crc << 1) ^ 8'h89; // Shift left and XOR with polynomial
-                end else begin
-                    crc = crc << 1;  // Just shift left
+            // Iterate over each byte in the input data
+            for (i = 0; i < J0_FRAME_LENGTH-1; i++) begin
+                byte1 = data[i];
+                crc ^= byte1;  // XOR byte into the CRC
+
+                // Process each bit in the byte
+                for (j = 0; j < 8; j++) begin
+                    if (crc[7] == 1'b1) begin
+                        crc = (crc << 1) ^ 8'h89;  // Shift left and XOR with polynomial
+                    end else begin
+                        crc = crc << 1;  // Just shift left
+                    end
                 end
             end
-        end
 
-        // Assign the top 7 bits of the CRC register to the output
-        crc_out = {1'b1,crc[7:1]};
-        return crc_out;
+            crc7_calculate = crc[7:1];  // Return the top 7 bits as CRC-7
+        end
     endfunction
 
+
+    function void init_j0_frame();
+        for (int i = 1; i < J0_FRAME_LENGTH; i++) begin
+            if (i - 1 < J0_TRACE_MESSAGE.len()) begin
+                j0_frame[i][7] = 1'b0;
+                j0_frame[i][6:0] = byte'(J0_TRACE_MESSAGE[i - 1]);
+            end else begin
+                j0_frame[i][7] = 1'b0;
+                j0_frame[i][6:0] = byte'(" "); // Space character
+            end
+        end
+        j0_frame[0][7] = 1'b1;
+        j0_frame[0][6:0] = crc7_calculate(j0_frame[1:J0_FRAME_LENGTH-1]);
+    endfunction
+
+    function void update_J0_trace_message(string new_message);
+        J0_TRACE_MESSAGE = new_message;
+        init_j0_frame();
+    endfunction
 
 endclass
