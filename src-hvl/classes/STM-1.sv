@@ -35,9 +35,9 @@ class STM1;
     bit [7:0] M1;
     bit [7:0] E2;
 
-    // extra variables
-    bit [7:0] previous_B1;
-    bit [23:0] previous_B2;
+    // extra variables for xor calculation for B1 and B2
+    bit[7:0] frame_xor;
+    bit [23:0] semi_frame_xor;
     
     // J0 parametere
     localparam int J0_FRAME_LENGTH = 16;
@@ -47,10 +47,12 @@ class STM1;
 
     rand bit [8:0][269:0][7:0] f;
 
-    function new();
+    function new(bit[7:0] frame_xor = 0,bit [23:0] semi_frame_xor = 0);
         au4 = new(); 
         j0_frame_counter = 0;
-        
+        init_j0_frame();
+        B1 = frame_xor;
+        B2 = semi_frame_xor;
     endfunction
 
     function void pre_randomize();
@@ -58,7 +60,7 @@ class STM1;
             $display("STM-1: AU4 randomization failed");
         end else begin
             $display("STM-1: This will be called just before randomization");
-            init_j0_frame();
+            
 
             A1 = calculate_A1();
             A2 = calculate_A2();
@@ -87,12 +89,17 @@ class STM1;
             Z1 = calculate_Z1();
             Z2 = calculate_Z2();
             M1 = calculate_M1();
-            E2 = calculate_E2();      
+            E2 = calculate_E2(); 
+
+            frame = get_stm_frame();
+            calculate_frame_xor();
+            calculate_semi_frame_xor();     
         end
     endfunction
 
     function void post_randomize();
         $display("STM-1: This will be called just after randomization");
+        
     endfunction
 
     function void calculate_soh();
@@ -214,10 +221,10 @@ class STM1;
                     endcase 
                     default: frame[i][j] = 8'b0;
                 endcase
-                $display("data[%d][%d] = %d",i,j,frame[i][j]);
+                // $display("data[%d][%d] = %d",i,j,frame[i][j]);
             end else begin
                 frame[i][j] = au4.vc4.data[i][j-9];
-                $display("data[%d][%d] = %d",i,j,frame[i][j]);
+                // $display("data[%d][%d] = %d",i,j,frame[i][j]);
             end
             
             end
@@ -261,11 +268,7 @@ class STM1;
     endfunction
 
     function bit [7:0] calculate_B1();
-        previous_B1 = 8'b0;
-        for (int i = 0; i < STM1_Length*STM1_Width; i++) begin
-            previous_B1 = previous_B1 ^ frame[i];
-        end
-        return previous_B1;
+        return B1;
     endfunction
 
     function bit [7:0] calculate_E1();
@@ -294,11 +297,7 @@ class STM1;
     endfunction
 
     function bit [7:0] calculate_B2();
-        previous_B2 = 24'h0;
-        for (int i = 0; i < STM1_Length*STM1_Width ; i+=3 ) begin
-            previous_B2 = previous_B2 ^ {frame[i],frame[i+1],frame[i+2]};
-        end
-        return previous_B2;
+        return B2;
     endfunction
 
     function bit [7:0] calculate_K1();
@@ -428,6 +427,28 @@ class STM1;
     function void update_J0_trace_message(string new_message);
         J0_TRACE_MESSAGE = new_message;
         init_j0_frame();
+    endfunction
+
+    function void calculate_frame_xor();
+        bit[7:0] current_frame_xor = 8'h00;
+        for (int i = 0; i < STM1_Width ; i++) begin
+            for (int j = 0; j < STM1_Length ; j++) begin
+                current_frame_xor ^= frame[i][j];
+            end
+        end
+        frame_xor = current_frame_xor;
+        // $display(frame_xor);
+    endfunction
+
+    function void calculate_semi_frame_xor();
+        bit[7:0] current_semi_frame_xor = 8'h00;
+        for (int i = 3; i < STM1_Width ; i++) begin
+            for (int j = 0; j < STM1_Length ; j++) begin
+                current_semi_frame_xor ^= frame[i][j];
+            end
+        end
+        semi_frame_xor = current_semi_frame_xor;
+        // $display(semi_frame_xor);
     endfunction
 
 endclass
