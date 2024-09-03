@@ -13,7 +13,7 @@ class VC4;
     static int j1_frame_counter = 0;
 
     // B3 related variable
-    static bit[7:0] previous_frame_xor;
+    static bit[7:0] previous_frame_xor 8'h00;
 
     // C2 related variables
     bit[7:0] c2_value;
@@ -33,7 +33,7 @@ class VC4;
         c4 = new();
         j1_frame_counter;
         init_j1_frame();
-        previous_frame_xor = 8'h00;
+        B3 = previous_frame_xor;
     endfunction
 
     function void pre_randomize();
@@ -51,6 +51,8 @@ class VC4;
             F3 = calculate_F3();
             K3 = calculate_K3();
             N1 = calculate_N1();
+
+            update_previous_frame_xor();
         end
     endfunction
 
