@@ -1,19 +1,19 @@
 import param_pkg::*;
-import C4::*;
+import class_pkg::*;
 
 class VC4;
     C4 c4;
     rand bit [Byte_Num-1:0] poh[c4_Width]; // Path Overhead
+    bit [c4_Width-1:0][261-1:0][Byte_Num-1:0] data;
     bit[7:0] J1, B3, C2, G1, F2, H4, F3, K3, N1;
 
     // J1 trace variables
-    string J1_TRACE_MESSAGE = "PARMAN_________";
     localparam int J1_FRAME_LENGTH = 16;
     byte j1_frame[J1_FRAME_LENGTH];
-    int j1_frame_counter;
+    static int j1_frame_counter;
 
     // B3 and C2 related variables
-    bit [Byte_Num-1:0] previous_vc4_data[c4_Width][c4_Length];
+    static bit [c4_Width-1:0][c4_Length-1:0][Byte_Num-1:0] previous_vc4_data;
     bit[7:0] c2_value;
     typedef enum bit [7:0] {
         UNEQUIPPED           = 8'h00,
@@ -27,16 +27,55 @@ class VC4;
         FDDI_MAPPING         = 8'h15
     } c2_state_e;
 
+
+
+
     function new();
         c4 = new();
         j1_frame_counter = 0;
         init_j1_frame();
     endfunction
 
-    function void init_j1_frame();
+
+    function void pre_randomize();
+        if (!c4.randomize()) begin
+            $display("VC4: C4 randomization failed");
+        end else begin
+            $display("VC4: This will be called just before randomization");
+            // Initialize Path Overhead according to ITU-T G.707
+            J1 = calculate_J1();
+            B3 = calculate_B3();
+            C2 = calculate_C2();
+            G1 = calculate_G1();
+            F2 = calculate_F2();
+            H4 = calculate_H4();
+            F3 = calculate_F3();
+            K3 = calculate_K3();
+            N1 = calculate_N1();
+
+            // Update POH array
+            poh[0] = J1;
+            poh[1] = B3;
+            poh[2] = C2;
+            poh[3] = G1;
+            poh[4] = F2;
+            poh[5] = H4;
+            poh[6] = F3;
+            poh[7] = K3;
+            poh[8] = N1;
+            this.insert_poh(); 
+        end
+    endfunction
+
+    function void post_randomize();
+        //$display("VC4: This will be called just after randomization");
+    endfunction
+
+    // Usage:     vc4_instance.init_j1_frame("NEW_MESSAGE____");
+    function void init_j1_frame(string J1_TRACE_MESSAGE = "PARMAN_________");
         for (int i = 0; i < J1_FRAME_LENGTH; i++) begin
             if (i < J1_TRACE_MESSAGE.len()) begin
-                j1_frame[i] = byte'(J1_TRACE_MESSAGE[i]);
+                j1_frame[i] = int'(byte'(J1_TRACE_MESSAGE[i]));
             end else begin
                 j1_frame[i] = " "; // Space character
             end
@@ -44,45 +83,11 @@ class VC4;
     endfunction
 
     // New function to update J1 trace message
-    // Usage:     vc4_instance.update_j1_trace_message("NEW_MESSAGE____");
-    function void update_j1_trace_message(string new_message);
-        J1_TRACE_MESSAGE = new_message;
-        init_j1_frame();
-    endfunction
+    //function void update_j1_trace_message(string new_message);
+    //    J1_TRACE_MESSAGE = new_message;
+    //    init_j1_frame();
+    //endfunction
 
-    function void pre_randomize();
-        if (!c4.randomize()) begin
-            $display("VC4: C4 randomization failed");
-        end else begin
-            $display("VC4: This will be called just before randomization");
-        end
-    endfunction
-
-    function void post_randomize();
-        $display("VC4: This will be called just after randomization");
-
-        // Initialize Path Overhead according to ITU-T G.707
-        J1 = calculate_J1();
-        B3 = calculate_B3();
-        C2 = calculate_C2();
-        G1 = calculate_G1();
-        F2 = calculate_F2();
-        H4 = calculate_H4();
-        F3 = calculate_F3();
-        K3 = calculate_K3();
-        N1 = calculate_N1();
-
-        // Update POH array
-        poh[0] = J1;
-        poh[1] = B3;
-        poh[2] = C2;
-        poh[3] = G1;
-        poh[4] = F2;
-        poh[5] = H4;
-        poh[6] = F3;
-        poh[7] = K3;
-        poh[8] = N1;
-    endfunction
 
     function byte calculate_J1();
         byte crc;
@@ -125,13 +130,13 @@ class VC4;
     endfunction
 
     function byte calculate_B3();
-    byte bip8 = 8'h00;
-    for (int i = 0; i < c4_Width; i++) begin
-        for (int j = 0; j < c4_Length; j++) begin
-            bip8 ^= previous_vc4_data[i][j];
+        byte bip8 = 8'h00;
+        for (int i = 0; i < c4_Width; i++) begin
+            for (int j = 0; j < c4_Length; j++) begin
+                bip8 ^= previous_vc4_data[i][j];
+            end
         end
-    end
-    return bip8;
+        return bip8;
     endfunction
 
 
@@ -217,27 +222,21 @@ class VC4;
 
     function void insert_poh();
         // Create a new array with increased width
-        bit [Byte_Num-1:0] new_data[c4_Width][261];
+        // Add POH as the last column
+        for (int i = 0; i < 9; i++) begin
+            data[i][0] = poh[i];
+        end
+        
 
-        // Copy existing data
+                // Copy existing data
         for (int i = 0; i < c4_Width; i++) begin
-            for (int j = 0; j < 260; j++) begin
-                new_data[i][j] = c4.data[i][j];
+            for (int j = 1; j < 261; j++) begin
+                data[i][j] = c4.data[i][j-1];
             end
         end
 
-        // Add POH as the last column
-        for (int i = 0; i < 9; i++) begin
-            new_data[i][260] = poh[i];
-        end
 
-        // Fill the rest of the new column with zeros
-        for (int i = 9; i < c4_Width; i++) begin
-            new_data[i][260] = 8'h00;
-        end
 
-        // Update c4.data with the new array
-        c4.data = new_data;
     endfunction
 
     function void display_poh();
@@ -247,6 +246,7 @@ class VC4;
         end
     endfunction
 
+
     // Function to update previous VC-4 data
     function void update_previous_vc4_data();
         for (int i = 0; i < c4_Width; i++) begin
@@ -255,6 +255,5 @@ class VC4;
             end
         end
     endfunction
-
 
 endclass
