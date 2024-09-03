@@ -1,7 +1,7 @@
 package param_pkg;
 
     // global params & typedefs 
-    typedef int dimensions_t[2];
+    typedef bit[0:1][31:0] dimensions_t;
 
 
     // C4 params & typedefs    
@@ -22,7 +22,11 @@ package param_pkg;
               N_letter = 8'b01001110,
               SPACE_letter = 8'b00100000;
 
-    // CSV params & typedefs
+    // CSV params & typedefs            
+    parameter byte C4_OUT = 0;
+    parameter byte VC4_OUT = 1;   
+    parameter byte STM1_OUT = 2;  
+
     parameter bit row_based = 0;
     parameter bit col_based = 1;
     parameter bit HEX = 0;
