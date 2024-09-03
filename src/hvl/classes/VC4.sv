@@ -8,19 +8,29 @@ class VC4;
 
     // J1 trace variables
     string J1_TRACE_MESSAGE = "PARMAN_________";
-    const int J1_FRAME_LENGTH = 16;
+    localparam int J1_FRAME_LENGTH = 16;
     byte j1_frame[J1_FRAME_LENGTH];
     int j1_frame_counter;
 
     // B3 and C2 related variables
-    byte previous_vc4_data[];
-    byte c2_value;
+    bit [Byte_Num-1:0] previous_vc4_data[c4_Width][c4_Length];
+    bit[7:0] c2_value;
+    typedef enum bit [7:0] {
+        UNEQUIPPED           = 8'h00,
+        EQUIPPED_NON_SPECIFIC = 8'h01,
+        TUG_STRUCTURE        = 8'h02,
+        LOCKED_TU            = 8'h03,
+        ASYNC_34_368_OR_44_736 = 8'h04,
+        ASYNC_139_264        = 8'h12,
+        ATM_MAPPING          = 8'h13,
+        MAN_DQDB_MAPPING     = 8'h14,
+        FDDI_MAPPING         = 8'h15
+    } c2_state_e;
 
     function new();
         c4 = new();
         j1_frame_counter = 0;
         init_j1_frame();
-        c2_value = 8'h02;
     endfunction
 
     function void init_j1_frame();
@@ -115,17 +125,46 @@ class VC4;
     endfunction
 
     function byte calculate_B3();
-        byte bip8 = 8'h00;
-        if (previous_vc4_data.size() > 0) begin
-            for (int i = 0; i < previous_vc4_data.size(); i++) begin
-                bip8 ^= previous_vc4_data[i];
-            end
+    byte bip8 = 8'h00;
+    for (int i = 0; i < c4_Width; i++) begin
+        for (int j = 0; j < c4_Length; j++) begin
+            bip8 ^= previous_vc4_data[i][j];
         end
-        return bip8;
+    end
+    return bip8;
     endfunction
 
+
     function byte calculate_C2();
+        c2_value = 8'h00;
         return c2_value;
+    endfunction
+
+    // Function to set C2 value
+    function void set_c2_value(bit[7:0] value);
+        c2_value = value;
+        display_c2_state(value);
+    endfunction
+
+    // Function to get C2 state as a string based on the current c2_value
+    function string get_c2_state_string();
+    case (c2_value)
+        8'h00: return "Unequipped";
+        8'h01: return "Equipped - non specific";
+        8'h02: return "TUG structure";
+        8'h03: return "Locked TU";
+        8'h04: return "Asynchronous mapping of 34,368 kbit/s or 44,736 kbit/s into Container-3";
+        8'h12: return "Asynchronous mapping of 139,264 kbit/s into Container-4";
+        8'h13: return "ATM mapping";
+        8'h14: return "MAN (DQDB) mapping";
+        8'h15: return "FDDI mapping";
+        default: return "Unknown";
+    endcase
+    endfunction
+
+    function void display_c2_state(bit [7:0] input_byte);
+        $display("C2 Byte: 0x%0h", input_byte);
+        $display("C2 State: %s", get_c2_state_string());
     endfunction
 
     function byte calculate_G1();
@@ -208,19 +247,14 @@ class VC4;
         end
     endfunction
 
-    // Function to set C2 value
-    function void set_c2_value(byte value);
-        c2_value = value;
-    endfunction
-
     // Function to update previous VC-4 data
     function void update_previous_vc4_data();
-        previous_vc4_data = new[c4.data.size() * c4.data[0].size()];
-        int index = 0;
-        for (int i = 0; i < c4.data.size(); i++) begin
-            for (int j = 0; j < c4.data[i].size(); j++) begin
-                previous_vc4_data[index++] = c4.data[i][j];
+        for (int i = 0; i < c4_Width; i++) begin
+            for (int j = 0; j < c4_Length; j++) begin
+                previous_vc4_data[i][j] = c4.data[i][j];
             end
         end
     endfunction
+
+
 endclass
