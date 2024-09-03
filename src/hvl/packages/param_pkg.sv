@@ -23,6 +23,10 @@ package param_pkg;
               SPACE_letter = 8'b00100000;
 
     // CSV params & typedefs
+    parameter byte C4_OUT = 0;
+    parameter byte VC4_OUT = 1;   
+    parameter byte STM1_OUT = 2; 
+    
     parameter bit row_based = 0;
     parameter bit col_based = 1;
     parameter bit HEX = 0;
