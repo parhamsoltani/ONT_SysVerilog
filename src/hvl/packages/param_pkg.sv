@@ -1,7 +1,7 @@
 package param_pkg;
 
     // global params & typedefs 
-    typedef int dimensions_t[2];
+    typedef bit [1:0][31:0] dimensions_t;
 
 
     // C4 params & typedefs    
