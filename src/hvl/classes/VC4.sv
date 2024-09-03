@@ -12,8 +12,10 @@ class VC4;
     byte j1_frame[J1_FRAME_LENGTH];
     static int j1_frame_counter;
 
-    // B3 and C2 related variables
-    static bit [c4_Width-1:0][c4_Length-1:0][Byte_Num-1:0] previous_vc4_data;
+    // B3 related variable
+    static bit[7:0] previous_frame_xor;
+
+    // C2 related variables
     bit[7:0] c2_value;
     typedef enum bit [7:0] {
         UNEQUIPPED           = 8'h00,
@@ -31,6 +33,7 @@ class VC4;
         c4 = new();
         j1_frame_counter = 0;
         init_j1_frame();
+        previous_frame_xor = 8'h00;
     endfunction
 
     function void pre_randomize();
@@ -105,12 +108,7 @@ class VC4;
     endfunction
 
     function byte calculate_B3();
-        byte bip8 = 8'h00;
-        for (int i = 0; i < c4_Width; i++) begin
-            for (int j = 0; j < c4_Length; j++) begin
-                bip8 ^= previous_vc4_data[i][j];
-            end
-        end
+        byte bip8 = previous_frame_xor;
         add_poh_byte("B3", 1, bip8);
         return bip8;
     endfunction
@@ -197,12 +195,14 @@ class VC4;
         end
     endfunction
 
-    function void update_previous_vc4_data();
+    function void update_previous_frame_xor();
+        bit[7:0] current_frame_xor = 8'h00;
         for (int i = 0; i < c4_Width; i++) begin
             for (int j = 0; j < c4_Length; j++) begin
-                previous_vc4_data[i][j] = c4.data[i][j];
+                current_frame_xor ^= c4.data[i][j];
             end
         end
+        previous_frame_xor = current_frame_xor;
     endfunction
 
 endclass
