@@ -1,7 +1,7 @@
 package param_pkg;
 
     // global params & typedefs 
-    typedef bit [1:0][31:0] dimensions_t;
+    typedef bit [0:1][31:0] dimensions_t;
 
 
     // C4 params & typedefs    
@@ -10,7 +10,7 @@ package param_pkg;
               Byte_Num = 8;
 
     // VC4 params & typedefs    
-    parameter vc4_Length = 260,
+    parameter vc4_Length = 261,
               vc4_Width = 9;
 
     // STM1 params & typedefs
