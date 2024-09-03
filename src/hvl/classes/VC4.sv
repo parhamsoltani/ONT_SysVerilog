@@ -2,7 +2,7 @@ import param_pkg::*;
 import class_pkg::*;
 
 class VC4;
-    rand C4 c4;
+    C4 c4;
     rand bit [Byte_Num-1:0] poh[c4_Width]; // Path Overhead
     bit [c4_Width-1:0][261-1:0][Byte_Num-1:0] data;
     bit[7:0] J1, B3, C2, G1, F2, H4, F3, K3, N1;
@@ -29,6 +29,7 @@ class VC4;
 
 
 
+
     function new();
         c4 = new();
         j1_frame_counter = 0;
@@ -41,16 +42,6 @@ class VC4;
             $display("VC4: C4 randomization failed");
         end else begin
             $display("VC4: This will be called just before randomization");
-            // Initialize Path Overhead according to ITU-T G.707
-            J1 = calculate_J1();
-            B3 = calculate_B3();
-            C2 = calculate_C2();
-            G1 = calculate_G1();
-            F2 = calculate_F2();
-            H4 = calculate_H4();
-            F3 = calculate_F3();
-            K3 = calculate_K3();
-            N1 = calculate_N1();
             // Initialize Path Overhead according to ITU-T G.707
             J1 = calculate_J1();
             B3 = calculate_B3();
@@ -80,18 +71,7 @@ class VC4;
         //$display("VC4: This will be called just after randomization");
     endfunction
 
-    // Usage:     vc4_instance.init_j1_frame("NEW_MESSAGE____");
-    function void init_j1_frame(string J1_TRACE_MESSAGE = "PARMAN_________");
-        for (int i = 0; i < J1_FRAME_LENGTH; i++) begin
-            if (i < J1_TRACE_MESSAGE.len()) begin
-                j1_frame[i] = int'(byte'(J1_TRACE_MESSAGE[i]));
-            end else begin
-                j1_frame[i] = " "; // Space character
-            end
-        end
-    endfunction
-
-    function void init_j1_frame(string J1_TRACE_MESSAGE = "PARMAN_________");
+       function void init_j1_frame(string J1_TRACE_MESSAGE = "PARMAN_________");
         for (int i = 0; i < J1_FRAME_LENGTH; i++) begin
             if (i < J1_TRACE_MESSAGE.len()) begin
                 j1_frame[i] = int'(byte'(J1_TRACE_MESSAGE[i]));
@@ -102,6 +82,7 @@ class VC4;
     endfunction
 
     // New function to update J1 trace message
+    // Usage:     vc4_instance.update_j1_trace_message("NEW_MESSAGE____");
     //function void update_j1_trace_message(string new_message);
     //    J1_TRACE_MESSAGE = new_message;
     //    init_j1_frame();
@@ -153,14 +134,10 @@ class VC4;
         for (int i = 0; i < c4_Width; i++) begin
             for (int j = 0; j < c4_Length; j++) begin
                 bip8 ^= previous_vc4_data[i][j];
-        for (int i = 0; i < c4_Width; i++) begin
-            for (int j = 0; j < c4_Length; j++) begin
-                bip8 ^= previous_vc4_data[i][j];
             end
         end
         return bip8;
     endfunction
-
 
 
     function byte calculate_C2();
@@ -168,6 +145,11 @@ class VC4;
         return c2_value;
     endfunction
 
+    // Function to set C2 value
+    function void set_c2_value(bit[7:0] value);
+        c2_value = value;
+        display_c2_state(value);
+    endfunction
 
     // Function to get C2 state as a string based on the current c2_value
     function string get_c2_state_string();
@@ -190,13 +172,6 @@ class VC4;
         $display("C2 State: %s", get_c2_state_string());
     endfunction
 
-    // Function to set C2 value
-    function void set_c2_value(bit[7:0] value);
-        c2_value = value;
-        display_c2_state(value);
-    endfunction
-
-   
     function byte calculate_G1();
         // G1: Path Status
         // Bits 1-4: REI (Remote Error Indication)
@@ -248,12 +223,12 @@ class VC4;
     function void insert_poh();
         // Create a new array with increased width
         // Add POH as the last column
-        for (int i = 0; i < c4_Width; i++) begin
+        for (int i = 0; i < 9; i++) begin
             data[i][0] = poh[i];
         end
         
 
-        // Copy existing data
+                // Copy existing data
         for (int i = 0; i < c4_Width; i++) begin
             for (int j = 1; j < 261; j++) begin
                 data[i][j] = c4.data[i][j-1];
@@ -266,7 +241,7 @@ class VC4;
 
     function void display_poh();
         $display("VC4: Path Overhead");
-        for (int i = 0; i < c4_Width; i++) begin
+        for (int i = 0; i < 9; i++) begin
             $display("POH[%0d] = 0x%0h", i, poh[i]);
         end
     endfunction
@@ -277,12 +252,8 @@ class VC4;
         for (int i = 0; i < c4_Width; i++) begin
             for (int j = 0; j < c4_Length; j++) begin
                 previous_vc4_data[i][j] = c4.data[i][j];
-        for (int i = 0; i < c4_Width; i++) begin
-            for (int j = 0; j < c4_Length; j++) begin
-                previous_vc4_data[i][j] = c4.data[i][j];
             end
         end
     endfunction
-
 
 endclass
