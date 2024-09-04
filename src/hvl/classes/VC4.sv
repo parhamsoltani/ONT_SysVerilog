@@ -2,7 +2,7 @@ import param_pkg::*;
 import class_pkg::*;
 
 class VC4;
-    C4 c4;
+    rand C4 c4;
     rand bit [Byte_Num-1:0] poh[c4_Width]; // Path Overhead
     bit [vc4_Width-1:0][vc4_Length-1:0][Byte_Num-1:0] data;
     bit[7:0] J1, B3, C2, G1, F2, H4, F3, K3, N1;
