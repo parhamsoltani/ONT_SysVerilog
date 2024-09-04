@@ -17,6 +17,15 @@ Sub ColorSTM1()
     Dim base_frame As Integer
     Dim lastRow As Long
     Dim frameCount As Integer
+
+
+    Dim first_column As Range
+    Set first_column = Range("A:A")
+    
+    ' Freeze panes on the first column
+    first_column.Offset(0, 1).Select
+    ActiveWindow.FreezePanes = True
+    
     
     ' Set the base frame start row
     base_frame = 1
@@ -39,6 +48,7 @@ Sub ColorSTM1()
         Set RSOH = Range("B" & (base_frame + i * 11 + 1) & ":J" & (base_frame + i * 11 + 4))
         Set MSOH = Range("B" & (base_frame + i * 11 + 5) & ":J" & (base_frame + i * 11 + 9))
         Set Au_Ptr = Range("B" & (base_frame + i * 11 + 4) & ":J" & (base_frame + i * 11 + 4))
+        
         
         ' Highlight the ranges
         Frame_Name.Font.Bold = True
@@ -101,12 +111,6 @@ Sub ColorSTM1()
             .Color = RGB(0, 0, 0)
         End With
     
-    
-        ' freeze panes on row label culumn
-        Row_Index.Select
-        ActiveWindow.FreezePanes = True
- 
-        
         
     Next i
 
