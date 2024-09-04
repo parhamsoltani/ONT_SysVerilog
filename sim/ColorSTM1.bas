@@ -24,21 +24,21 @@ Sub ColorSTM1()
     ' Find the last row in column A
     lastRow = Cells(Rows.Count, "A").End(xlUp).Row
     
-    ' Count the number of frames based on "STM" prefix
+
     frameCount = (lastRow + 1) / 11
     
     ' Loop through to create the frames
     For i = 0 To frameCount - 1
         Set Frame_Name = Range("A" & (base_frame + i * 11))
-        Set Data = Range("L" & (base_frame + i * 11) & ":JK" & (base_frame + i * 11 + 9)) ' Adjusted to include the last row
+        Set Data = Range("L" & (base_frame + i * 11) & ":JK" & (base_frame + i * 11 + 9))
         Set Col_Index = Range("B" & (base_frame + i * 11) & ":JK" & (base_frame + i * 11))
-        Set Row_Index = Range("A" & (base_frame + i * 11) & ":A" & (base_frame + i * 11 + 9)) ' Adjusted to include the last row
-        Set Frame_Border = Range("B" & (base_frame + i * 11 + 1) & ":JK" & (base_frame + i * 11 + 9)) ' Adjusted to include the last row
+        Set Row_Index = Range("A" & (base_frame + i * 11) & ":A" & (base_frame + i * 11 + 9))
+        Set Frame_Border = Range("B" & (base_frame + i * 11 + 1) & ":JK" & (base_frame + i * 11 + 9))
         
-        Set POH = Range("K" & (base_frame + i * 11 + 1) & ":K" & (base_frame + i * 11 + 9)) ' Adjusted to include the last row
-        Set RSOH = Range("B" & (base_frame + i * 11 + 1) & ":J" & (base_frame + i * 11 + 4)) ' Adjusted to include the last row
-        Set MSOH = Range("B" & (base_frame + i * 11 + 5) & ":J" & (base_frame + i * 11 + 9)) ' Adjusted to include the last row
-        Set Au_Ptr = Range("B" & (base_frame + i * 11 + 4) & ":J" & (base_frame + i * 11 + 4)) ' Adjusted to include the last row
+        Set POH = Range("K" & (base_frame + i * 11 + 1) & ":K" & (base_frame + i * 11 + 9))
+        Set RSOH = Range("B" & (base_frame + i * 11 + 1) & ":J" & (base_frame + i * 11 + 4))
+        Set MSOH = Range("B" & (base_frame + i * 11 + 5) & ":J" & (base_frame + i * 11 + 9))
+        Set Au_Ptr = Range("B" & (base_frame + i * 11 + 4) & ":J" & (base_frame + i * 11 + 4))
         
         ' Highlight the ranges
         Frame_Name.Font.Bold = True
@@ -63,15 +63,15 @@ Sub ColorSTM1()
         Row_Index.HorizontalAlignment = xlCenter
         Row_Index.VerticalAlignment = xlCenter
         
-        ' Make cells square (adjusting height to match width)
+
         Dim col As Range
         For Each col In Frame_Border.Columns
-            col.ColumnWidth = 8
+            col.ColumnWidth = 7
             col.RowHeight = col.Width
         Next col
         
         For Each col In Col_Index.Columns
-            col.ColumnWidth = 8
+            col.ColumnWidth = 7
             col.RowHeight = col.Width
         Next col
         
@@ -79,28 +79,30 @@ Sub ColorSTM1()
             col.ColumnWidth = 15
         Next col
         
-        ' Add borders for Data
+        
+        ' Add borders
         With Frame_Border.Borders
             .LineStyle = xlContinuous
             .Weight = xlThin
-            .Color = RGB(0, 0, 0) ' Black color
+            .Color = RGB(0, 0, 0)
         End With
         
-        ' Add borders for Col_Index
+       
         With Col_Index.Borders
             .LineStyle = xlContinuous
             .Weight = xlMedium
-            .Color = RGB(0, 0, 0) ' Black color
+            .Color = RGB(0, 0, 0)
         End With
         
-        ' Add borders for Row_Index
+ 
         With Row_Index.Borders
             .LineStyle = xlContinuous
             .Weight = xlMedium
-            .Color = RGB(0, 0, 0) ' Black color
+            .Color = RGB(0, 0, 0)
         End With
     
-
+    
+        ' freeze panes on row label culumn
         Row_Index.Select
         ActiveWindow.FreezePanes = True
  
