@@ -23,7 +23,7 @@ Sub ColorSTM1()
     Set first_column = Range("A:A")
     
     ' Freeze panes on the first column
-    first_column.Select
+    first_column.Offset(0, 1).Select
     ActiveWindow.FreezePanes = True
     
     
