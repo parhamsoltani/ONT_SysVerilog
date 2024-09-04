@@ -1,6 +1,5 @@
 Attribute VB_Name = "Module2"
 Sub ColorSTM1()
-Attribute ColorSTM1.VB_ProcData.VB_Invoke_Func = "q\n14"
 
     Dim Frame_Name As Range
     Dim Data As Range
@@ -100,6 +99,13 @@ Attribute ColorSTM1.VB_ProcData.VB_Invoke_Func = "q\n14"
             .Weight = xlMedium
             .Color = RGB(0, 0, 0) ' Black color
         End With
+    
+
+        Row_Index.Select
+        ActiveWindow.FreezePanes = True
+ 
+        
+        
     Next i
 
 End Sub
