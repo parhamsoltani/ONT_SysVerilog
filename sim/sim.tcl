@@ -57,7 +57,7 @@
 	# bp $project_path/sim/tb/inc/MicroReadWrite.sv 14
 	# bp $project_path/sim/tb/inc/MicroReadWrite.sv 19
 	# bp $project_path/sim/tb/inc/MicroReadWrite.sv 21
-	bp $project_path/sim/tb/tb1.sv  14
+	# bp $project_path/sim/tb/tb1.sv 18 
 	#bp
 #========== adding signals to wave window
 	do wave/wave.tcl
