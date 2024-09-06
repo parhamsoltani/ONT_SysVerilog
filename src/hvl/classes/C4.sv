@@ -15,5 +15,7 @@ class C4;
 
     function int index_2Dto1D(input int row, column);
         return row * C4_WIDTH + column;
-    endfunction   
+    endfunction
 endclass
+
+

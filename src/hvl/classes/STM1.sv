@@ -2,7 +2,7 @@ import param_pkg::*;
 import class_pkg::*;
 
 class STM1;
-    rand AU4 au4;
+    AU4 au4;
     // STM-1 full frame
     bit [0:STM1_WIDTH-1][0:STM1_LENGTH-1][BYTE_NUM-1:0] frame;
     // RSOH
@@ -56,15 +56,23 @@ class STM1;
         init_j0_frame();
         B1 = frame_xor;
         B2 = semi_frame_xor;
+        // $display("STM before soh");
+        // calculate_soh();
+        // $display("STM new ended!");
     endfunction
 
     function void pre_randomize();
-        // $display("STM-1: This will be called just before randomization");
-        
+        //$display("STM-1: This will be called just before randomization");
+        if(au4.randomize()) begin
+        end
+
+        else begin
+            $display("AU4 randomization failed!");
+        end
     endfunction
 
     function void post_randomize();
-        // $display("STM-1: This will be called just after randomization");
+        //$display("STM-1: This will be called just after randomization");
         calculate_soh();
     endfunction
 
@@ -146,8 +154,19 @@ class STM1;
         return 8'hF6;
     endfunction
 
+    function void [7:0] update_A1(input bit[7:0] new_A1);
+        A1 = new_A1;
+        update_overheads();
+    endfunction
+
+
     function bit [7:0] calculate_A2();
         return 8'h28;
+    endfunction
+
+    function void [7:0] update_A1(input bit[7:0] new_A2);
+        A1 = new_A1;
+        update_overheads();
     endfunction
 
     function bit [7:0] calculate_C1();

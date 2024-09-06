@@ -2,7 +2,7 @@ import param_pkg::*;
 import class_pkg::*;
 
 class VC4;
-    rand C4 c4;
+    C4 c4;
     rand bit [0:C4_WIDTH-1][BYTE_NUM-1:0] poh; // Path Overhead
     bit [0:VC4_WIDTH-1][0:VC4_LENGTH-1][BYTE_NUM-1:0] data;
     bit [7:0] J1; 
@@ -49,25 +49,26 @@ class VC4;
 
     function void pre_randomize();
         // $display("VC4: This will be called just before randomization");
-        // Initialize Path Overhead according to ITU-T G.707
-         
-        
-        
+        if(c4.randomize()) begin
+        end
+        else begin
+            $display("C4 randomization failed!");
+        end
     endfunction
 
     function void post_randomize();
         // $display("VC4: This will be called just after randomization");
-            J1 = calculate_J1();
-            B3 = calculate_B3();
-            C2 = calculate_C2();
-            G1 = calculate_G1();
-            F2 = calculate_F2();
-            H4 = calculate_H4();
-            F3 = calculate_F3();
-            K3 = calculate_K3();
-            N1 = calculate_N1();
-            insert_data();
-            insert_poh();
+        J1 = calculate_J1();
+        B3 = calculate_B3();
+        C2 = calculate_C2();
+        G1 = calculate_G1();
+        F2 = calculate_F2();
+        H4 = calculate_H4();
+        F3 = calculate_F3();
+        K3 = calculate_K3();
+        N1 = calculate_N1();
+        insert_data();
+        insert_poh();
     endfunction
 
     function void  update_vc4_data();

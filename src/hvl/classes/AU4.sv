@@ -2,7 +2,7 @@ import param_pkg::*;
 import class_pkg::*;
 
 class AU4;
-    rand VC4 vc4;
+    VC4 vc4;
     rand bit [15:0] h1h2; // H1 and H2 bytes of the AU pointer
     rand bit [7:0] h3; // H3 byte of the AU pointer
     bit [7:0] aup[3]; // Administrative Unit Pointer
@@ -30,6 +30,11 @@ class AU4;
 
     function void pre_randomize();
         // $display("AU4: This will be called just before randomization");
+        if(vc4.randomize()) begin
+        end
+        else begin
+            $display("VC4 randomization failed!");
+        end
     endfunction
 
     function void post_randomize();
