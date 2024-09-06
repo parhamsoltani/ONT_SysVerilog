@@ -1,38 +1,46 @@
 
 import param_pkg::*;
 import class_pkg::*;
+
 class AU4;
     VC4 vc4;
     rand bit [15:0] h1h2; // H1 and H2 bytes of the AU pointer
     rand bit [BYTE_NUM-1:0] h3; // H3 byte of the AU pointer
     bit [7:0] aup[3]; // Administrative Unit Pointer
     typedef bit [BYTE_NUM-1:0] au4_frame_t [VC4_WIDTH][VC4_LENGTH];  // Define a typedef for the array dimensions of the frame
+    
     // Pointer-related variables
     static int pointer_value; // indicates the start of the VC-4 payload within AU-4 frame, which ranges between 0 to 782.
     static bit new_data_flag; // indicates whether new data is being pointed to.
     static bit increment_flag; // set where an extra byte is added due to clock ppm.
     static bit decrement_flag; // set where a byte is removed due to clock ppm and timing differences.
+    
     // Stuff bytes
     // Constant values are specific to the SDH to maintain bit patterns in the data stream, helping with clock recovery and frame alignment in the physical layer.
     localparam bit [BYTE_NUM-1:0] FIXED_STUFF_BYTE = 8'h00;
     localparam bit [BYTE_NUM-1:0] POSITIVE_STUFF_OPPORTUNITY = 8'hB8;
     localparam bit [BYTE_NUM-1:0] NEGATIVE_STUFF_OPPORTUNITY = 8'hC5;
+    
     constraint h1h2_format {
         h1h2[15:12] == 4'b0110;  // NDF disabled by default
         h1h2[11:10] == 2'b10;    // SS bits set to '1 0'
         h1h2[9:0] == 10'h20A;    // Default pointer value 522 (0x20A)
     }
+    
     function new(bit[7:0] vc4_xor = 0);
         vc4 = new(vc4_xor);
     endfunction
+    
     function void pre_randomize();
         // $display("AU4: This will be called just before randomization");
     endfunction
+    
     function void post_randomize();
         // $display("AU4: This will be called just after randomization");
         calculate_aup();
     endfunction
-      function void assign_pointer_value(int new_pointer_value);
+    
+    function void assign_pointer_value(int new_pointer_value);
         if (new_pointer_value < 0 || new_pointer_value > 3*VC4_LENGTH-1) begin
             $error("AU4: Invalid pointer value. Must be between 0 and 782.");
             return;
@@ -46,6 +54,7 @@ class AU4;
         calculate_aup();
         $display("AU4: New pointer value assigned: %0d", pointer_value);
     endfunction
+    
     function bit [BYTE_NUM-1:0] calculate_h3(int ptr_value);
         // Calculate H3 based on pointer value
         if (ptr_value == 0) begin
@@ -58,6 +67,7 @@ class AU4;
             return vc4.c4.data[(ptr_value - 1) / C4_LENGTH][(ptr_value - 1) % C4_LENGTH];
         end
     endfunction
+    
     function void calculate_aup();
         // Extract pointer value from h1h2
         pointer_value = h1h2 & 10'h3FF;
@@ -74,6 +84,7 @@ class AU4;
                  pointer_value, new_data_flag, increment_flag, decrement_flag);
         $display("AU4: H3 value: 0x%h", h3);
     endfunction 
+    
     function au4_frame_t build_au4_frame();
         au4_frame_t frame;
         int row, column;
@@ -97,6 +108,7 @@ class AU4;
         end
         return frame;
     endfunction
+    
     function void print_frame(au4_frame_t frame);
         for (int i = 0; i < VC4_WIDTH; i++) begin
             for (int j = 0; j < VC4_LENGTH; j++) begin
@@ -105,6 +117,7 @@ class AU4;
             $write("\n");
         end
     endfunction
+    
     function void simulate_pointer_adjustment();
         // Randomly decide whether to adjust the pointer
         if ($urandom_range(100) < 5) begin  // 5% chance of adjustment
@@ -132,4 +145,5 @@ class AU4;
         
         calculate_aup();
     endfunction
+    
 endclass
