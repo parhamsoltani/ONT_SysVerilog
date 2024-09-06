@@ -6,6 +6,7 @@ class AU4;
     rand bit [15:0] h1h2; // H1 and H2 bytes of the AU pointer
     rand bit [7:0] h3; // H3 byte of the AU pointer
     bit [7:0] aup[3]; // Administrative Unit Pointer
+    typedef bit [7:0] au4_frame_t [9][261];  // Define a typedef for the array dimensions of the frame
 
     // Pointer-related variables
     int pointer_value; // indicates the start of the VC-4 payload within AU-4 frame, which ranges between 0 to 782.
@@ -72,8 +73,8 @@ class AU4;
         end
     endfunction
 
-    function bit [9-1:0][261-1:0][7:0] get_au4_frame ;
-        bit [9-1:0][261-1:0][7:0] frame;
+    function au4_frame_t get_au4_frame();  // Use typedef for the return type
+        au4_frame_t frame;  // Declare the frame array using the typedef
         int adjusted_pointer = pointer_value;
         int stuff_column = 261;
 
