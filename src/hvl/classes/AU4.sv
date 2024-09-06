@@ -6,7 +6,6 @@ class AU4;
     rand bit [15:0] h1h2; // H1 and H2 bytes of the AU pointer
     rand bit [7:0] h3; // H3 byte of the AU pointer
     bit [7:0] aup[3]; // Administrative Unit Pointer
-    typedef bit [7:0] au4_frame_t [9][261];  // Define a typedef for the array dimensions of the frame
 
     // Pointer-related variables
     int pointer_value; // indicates the start of the VC-4 payload within AU-4 frame, which ranges between 0 to 782.
@@ -25,20 +24,16 @@ class AU4;
         h1h2[13:11] != 3'b111;   // Invalid combination
     }
 
-    function new();
-        vc4 = new();
+    function new(bit[7:0] vc4_xor = 0);
+        vc4 = new(vc4_xor);
     endfunction
 
     function void pre_randomize();
-        if (!vc4.randomize()) begin
-            $display("AU4: VC4 randomization failed");
-        end else begin
-            $display("AU4: This will be called just before randomization");
-        end
+        // $display("AU4: This will be called just before randomization");
     endfunction
 
     function void post_randomize();
-        $display("AU4: This will be called just after randomization");
+        // $display("AU4: This will be called just after randomization");
         calculate_aup();
     endfunction
 
@@ -62,8 +57,7 @@ class AU4;
             aup[2] = h3;  // Normal operation
         end
 
-        $display("AU4: Pointer Value: %0d, New Data Flag: %b, Increment: %b, Decrement: %b", 
-                 pointer_value, new_data_flag, increment_flag, decrement_flag);
+        // $display("AU4: Pointer Value: %0d, New Data Flag: %b, Increment: %b, Decrement: %b", pointer_value, new_data_flag, increment_flag, decrement_flag);
     endfunction
 
     function void display_aup();
@@ -73,8 +67,8 @@ class AU4;
         end
     endfunction
 
-    function au4_frame_t get_au4_frame();  // Use typedef for the return type
-        au4_frame_t frame;  // Declare the frame array using the typedef
+    function bit [9-1:0][261-1:0][7:0] get_au4_frame ;
+        bit [9-1:0][261-1:0][7:0] frame;
         int adjusted_pointer = pointer_value;
         int stuff_column = 261;
 
