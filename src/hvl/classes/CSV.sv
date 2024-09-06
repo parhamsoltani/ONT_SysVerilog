@@ -4,23 +4,19 @@
     class CSV;
         int file;
 
-        localparam max_col_size = 270,
-                   max_row_size = 9;
-
-        
-
-
+        localparam int MAX_COL_SIZE = 270;
+        localparam int MAX_ROW_SIZE = 9;
 
         function void open_csv(input string file_name = "output");
             file = $fopen({file_name,".csv"} , "w");
 
             if(file == 0) begin
-                $display("%s is being accessed by another application(probably opened in excel)",file_name);
+                $display("'%s.csv' is being accessed by another application(probably opened in excel)",file_name);
                 $display("%s close it and run the code again!",file_name);
             end
 
             else begin
-                $display("File is opened!");
+                $display("'%s.csv' is opened!", file_name);
             end
         endfunction : open_csv
 
@@ -54,7 +50,7 @@
 
             // COL_ALIGNED data writing
             // ========================
-            if(alignment == col_based) begin
+            if(alignment == COL_BASED) begin
                 foreach(data[i]) begin
                     data_str = (row_names.size()!=0)? row_names[i] : $sformatf("%d", i+1);
                     foreach (data[i,j]) begin
@@ -69,7 +65,7 @@
 
             // ROW_ALIGNED data writing
             // ========================
-            else if(alignment == row_based) begin
+            else if(alignment == ROW_BASED) begin
                 for (int j = 0; j<data[0].size(); j=j+1) begin
                     data_str = (row_names.size()!=0)? row_names[j] : $sformatf("%d", j+1);
                     foreach (data[i]) begin
@@ -123,13 +119,14 @@
         // packed input
         // ============
         // Either had to make multiple exclusive functions or set the bigest size as the data size
-        function void container_write(input bit [max_col_size*max_row_size-1:0][7:0] data ,byte cont_type, bit out_b=DEC, string col_names []={}, string row_names []={});
+        function void container_write(input bit [0:MAX_COL_SIZE*MAX_ROW_SIZE-1][7:0] data ,byte cont_type, bit out_b=DEC, string col_names []={}, string row_names []={});
             int row_size;
             int col_size;
 
             string data_str;
             string line_str;
             string col_names_str;
+            string frame_name;
             string out_base = (out_b==DEC)? "%0d" : "%0h";  //0x
 
 
@@ -225,24 +222,24 @@
                             
                 case (cont_type)
                     C4_OUT :  begin
-                        col_names_str = "C4";
+                        frame_name = "C4";
                         frame_counter[C4_OUT]++;
                     end
 
                     VC4_OUT : begin
-                        col_names_str = "VC4"; 
+                        frame_name = "VC4"; 
                         frame_counter[VC4_OUT]++;
                     end
 
                     STM1_OUT : begin
-                        col_names_str = "STM1";
+                        frame_name = "STM1";
                         frame_counter[STM1_OUT]++; 
                     end
 
-                    default: col_names_str = "";
+                    default: frame_name = "";
                 endcase
 
-                col_names_str = $sformatf("%s / frame %0d", col_names_str , frame_counter[cont_type]);
+                col_names_str = $sformatf("%s / frame %0d", frame_name , frame_counter[cont_type]);
             end
 
 
@@ -272,9 +269,7 @@
 
 
             $fdisplay(file, col_names_str);
-
-            //$display("rows = %d", row_size);
-            //$display("cols = %d", col_size);
+            $display("%s / frame %0d is written!", frame_name, frame_counter[cont_type]);
 
 
 
@@ -297,13 +292,11 @@
 
             // leave a row for the next frame
             $fdisplay(file, " ");
-
-
         endfunction : container_write
 
 
         function void close_csv();
-            $display("File saved!");
+            $display("File's saved!");
             $fclose(file);
         endfunction : close_csv
 
