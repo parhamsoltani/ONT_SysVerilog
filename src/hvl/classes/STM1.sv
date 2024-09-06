@@ -122,7 +122,7 @@ class STM1;
         frame[3][0:8] = {    H1     ,   8'b0   ,  8'b0   ,  H2  ,  8'b0  ,   8'b0  ,  H3  ,   H3   ,   H3  };
         frame[4][0:8] = { B2[23:16] , B2[15:8] , B2[7:0] ,  K1  ,  8'b0  ,   8'b0  ,  K2  ,  8'b0  ,  8'b0 };
         frame[5][0:8] = {    D4     ,   8'b0   ,  8'b0   ,  D5  ,  8'b0  ,   8'b0  ,  D6  ,  8'b0  ,  8'b0 };
-        frame[6][0:8] = {    D1     ,   8'b0   ,  8'b0   ,  D2  ,  8'b0  ,   8'b0  ,  D9  ,  8'b0  ,  8'b0 };
+        frame[6][0:8] = {    D7     ,   8'b0   ,  8'b0   ,  D8  ,  8'b0  ,   8'b0  ,  D9  ,  8'b0  ,  8'b0 };
         frame[7][0:8] = {    D10    ,   8'b0   ,  8'b0   ,  D11 ,  8'b0  ,   8'b0  ,  D12 ,  8'b0  ,  8'b0 };
         frame[8][0:8] = {    S1     ,    Z1    ,  Z1     ,  Z2  ,   Z2   ,    M1   ,  E2  ,  8'b0  ,  8'b0 };
 
@@ -136,18 +136,52 @@ class STM1;
         calculate_semi_frame_xor();
     endfunction
 
-    function void update_overheads();
-        frame[0][0:8] = {    A1     ,    A1    ,  A1     ,  A2  ,   A2   ,    A2   ,  J0  ,  8'b0  ,  8'b0 };
-        frame[1][0:8] = {    B1     ,   8'b0   ,  8'b0   ,  E1  ,  8'b0  ,   8'b0  ,  F1  ,  8'b0  ,  8'b0 };
-        frame[2][0:8] = {    D1     ,   8'b0   ,  8'b0   ,  D2  ,  8'b0  ,   8'b0  ,  D3  ,  8'b0  ,  8'b0 };
-        frame[3][0:8] = {    H1     ,   8'b0   ,  8'b0   ,  H2  ,  8'b0  ,   8'b0  ,  H3  ,   H3   ,   H3  };
-        frame[4][0:8] = { B2[23:16] , B2[15:8] , B2[7:0] ,  K1  ,  8'b0  ,   8'b0  ,  K2  ,  8'b0  ,  8'b0 };
-        frame[5][0:8] = {    D4     ,   8'b0   ,  8'b0   ,  D5  ,  8'b0  ,   8'b0  ,  D6  ,  8'b0  ,  8'b0 };
-        frame[6][0:8] = {    D1     ,   8'b0   ,  8'b0   ,  D2  ,  8'b0  ,   8'b0  ,  D9  ,  8'b0  ,  8'b0 };
-        frame[7][0:8] = {    D10    ,   8'b0   ,  8'b0   ,  D11 ,  8'b0  ,   8'b0  ,  D12 ,  8'b0  ,  8'b0 };
-        frame[8][0:8] = {    S1     ,    Z1    ,  Z1     ,  Z2  ,   Z2   ,    M1   ,  E2  ,  8'b0  ,  8'b0 };
-        calculate_frame_xor();
-        calculate_semi_frame_xor();
+
+    function void update_overheads_value(bit [5:0] overheads_name[$], bit [7:0] overheads_value[$]); 
+        if( overheads_name.size() == overheads_value.size()) begin
+            for (int i = 0; i < overheads_name.size() ; i++ ) begin
+                if(overheads_name[i] < 8) begin
+                        au4.vc4.update_poh_value(overheads_name[i],overheads_value[i]);
+                        frame[overheads_name[i]+1][9] = overheads_value[i]; 
+                end
+                else begin
+                    case (overheads_name[i])
+                        8 : begin A1 = overheads_value[i]; frame[0][0:2] = {A1,A1,A1}; end
+                        9 : begin A2 = overheads_value[i]; frame[0][3:5] = {A2,A2,A2}; end
+                        10 : begin E1 = overheads_value[i]; frame[1][3] = E1; end
+                        11 : begin F1 = overheads_value[i]; frame[1][6] = F1; end
+                        12 : begin D1 = overheads_value[i]; frame[2][0] = D1; end
+                        13 : begin D2 = overheads_value[i]; frame[2][3] = D2; end
+                        14 : begin D3 = overheads_value[i]; frame[2][6] = D3; end
+                        15 : begin K1 = overheads_value[i]; frame[4][3] = K1; end
+                        16 : begin K2 = overheads_value[i]; frame[4][6] = K2; end
+                        17 : begin D4 = overheads_value[i]; frame[5][0] = D4; end
+                        18 : begin D5 = overheads_value[i]; frame[5][3] = D5; end
+                        19 : begin D6 = overheads_value[i]; frame[5][6] = D6; end
+                        20 : begin D7 = overheads_value[i]; frame[6][0] = D7; end
+                        21 : begin D8 = overheads_value[i]; frame[6][3] = D8; end
+                        22 : begin D9 = overheads_value[i]; frame[6][6] = D9; end
+                        23 : begin D10 = overheads_value[i]; frame[7][0] = D10; end
+                        24 : begin D11 = overheads_value[i]; frame[7][3] = D11; end
+                        25 : begin D12 = overheads_value[i]; frame[7][6] = D12; end
+                        26 : begin S1 = overheads_value[i]; frame[8][0] = S1; end
+                        27 : begin Z1 = overheads_value[i]; frame[8][1:2] = {Z1,Z1}; end
+                        28 : begin Z2 = overheads_value[i]; frame[8][3:4] = {Z2,Z2}; end
+                        29 : begin M1 = overheads_value[i]; frame[8][5] = M1; end
+                        30 : begin E2 = overheads_value[i]; frame[8][6] = E2; end
+                        31 : begin H1 = overheads_value[i]; frame[3][0] = H1; end
+                        32 : begin H2 = overheads_value[i]; frame[3][3] = H2; end
+                        33 : begin H3 = overheads_value[i]; frame[3][6:8] = {H3,H3,H3}; end
+                        default : $display("STM1: Error! No such an overhead exist!");
+                    endcase
+                end
+                calculate_frame_xor();
+                calculate_semi_frame_xor();
+            end    
+        end
+        else begin
+            $display("STM1 :Error! size of overheads_name and overheads_value doesn't mached!");
+        end
     endfunction
 
     function bit [7:0] calculate_A1();
@@ -279,9 +313,7 @@ class STM1;
         return 8'b0;
     endfunction
 
-    function bit [6:0] crc7_calculate (
-        input bit [0:J0_FRAME_LENGTH-2][7:0] data  // 15-byte array input
-    );
+    function bit [6:0] crc7_calculate (input bit [0:J0_FRAME_LENGTH-2][7:0] data);
         bit [7:0] crc;
         bit [7:0] byte1;
         integer i, j;
@@ -304,7 +336,8 @@ class STM1;
                 end
             end
 
-            crc7_calculate = crc[7:1];  // Return the top 7 bits as CRC-7
+            return crc[7:1];  // Return the top 7 bits as CRC-7
+            
         end
     endfunction
 
@@ -329,7 +362,21 @@ class STM1;
         init_j0_frame();
         j0_frame_counter = 0;
         J0 = calculate_J0();
-        update_overheads();
+        frame[0][6] = J0;
+        calculate_frame_xor();
+        calculate_semi_frame_xor();
+    endfunction
+
+    function void update_J1_trace_message(string new_message);
+        au4.vc4.J1_TRACE_MESSAGE = new_message;
+        au4.vc4.init_j1_frame();
+        au4.vc4.j1_frame_counter = 0;
+        au4.vc4.J1 = au4.vc4.calculate_J1();
+        au4.vc4.data[0][0] = au4.vc4.J1;
+        frame[0][9] = au4.vc4.J1;
+        au4.vc4.calculate_vc4_xor();
+        calculate_frame_xor();
+        calculate_semi_frame_xor();
     endfunction
 
     function void calculate_frame_xor();

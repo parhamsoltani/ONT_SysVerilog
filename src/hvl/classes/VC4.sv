@@ -95,6 +95,19 @@ class VC4;
         end
     endfunction
 
+    function void update_poh_value(int i, bit [7:0] overheads_value);
+        case (i)
+            1 : begin C2 = overheads_value; data[2][0] = C2; poh[2] = C2; display_c2_state(C2); end
+            2 : begin G1 = overheads_value; data[3][0] = G1; poh[3] = G1; end
+            3 : begin F2 = overheads_value; data[4][0] = F2; poh[4] = F2; end
+            4 : begin H4 = overheads_value; data[5][0] = H4; poh[5] = H4; end
+            5 : begin F3 = overheads_value; data[6][0] = F3; poh[6] = F3; end
+            6 : begin K3 = overheads_value; data[7][0] = K3; poh[7] = K3; end
+            7 : begin N1 = overheads_value; data[8][0] = N1; poh[8] = N1; end 
+            default : $display("VC4: Error! No such a poh!");  
+        endcase
+        calculate_vc4_xor();
+    endfunction
     
     function bit [7:0] calculate_J1();
         return j1_frame[j1_frame_counter++];
@@ -178,7 +191,8 @@ class VC4;
         init_j1_frame();
         j1_frame_counter = 0;
         J1 = calculate_J1();
-        insert_poh();
+        data[0][0] = J1;
+        calculate_vc4_xor();
     endfunction
 
     function bit [6:0] crc7_calculate (input bit [0:J1_FRAME_LENGTH-2][7:0] data );
@@ -216,13 +230,6 @@ class VC4;
             end
         end
         vc4_xor = current_vc4_xor;
-    endfunction
-
-    // Function to set C2 value
-    function void set_c2_value(bit[7:0] value);
-        C2 = value;
-        insert_poh();
-        // display_c2_state(value);
     endfunction
 
     // Function to get C2 state as a string based on the current c2_value
