@@ -154,19 +154,8 @@ class STM1;
         return 8'hF6;
     endfunction
 
-    function void [7:0] update_A1(input bit[7:0] new_A1);
-        A1 = new_A1;
-        update_overheads();
-    endfunction
-
-
     function bit [7:0] calculate_A2();
         return 8'h28;
-    endfunction
-
-    function void [7:0] update_A1(input bit[7:0] new_A2);
-        A1 = new_A1;
-        update_overheads();
     endfunction
 
     function bit [7:0] calculate_C1();
