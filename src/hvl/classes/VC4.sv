@@ -2,21 +2,30 @@ import param_pkg::*;
 import class_pkg::*;
 
 class VC4;
-    C4 c4;
-    rand bit [Byte_Num-1:0] poh[c4_Width]; // Path Overhead
-    bit [vc4_Width-1:0][vc4_Length-1:0][Byte_Num-1:0] data;
-    bit[7:0] J1, B3, C2, G1, F2, H4, F3, K3, N1;
+    rand C4 c4;
+    rand bit [0:C4_WIDTH-1][BYTE_NUM-1:0] poh; // Path Overhead
+    bit [0:VC4_WIDTH-1][0:VC4_LENGTH-1][BYTE_NUM-1:0] data;
+    bit [7:0] J1; 
+    bit [7:0] B3;
+    bit [7:0] C2;
+    bit [7:0] G1;
+    bit [7:0] F2;
+    bit [7:0] H4;
+    bit [7:0] F3;
+    bit [7:0] K3;
+    bit [7:0] N1;
 
     // J1 trace variables
     localparam int J1_FRAME_LENGTH = 16;
-    byte j1_frame[J1_FRAME_LENGTH];
-    static int j1_frame_counter = 0;
+    static string J1_TRACE_MESSAGE = "PARMAN";
+    static bit[0:J1_FRAME_LENGTH-1][7:0] j1_frame;
+    static bit[3:0] j1_frame_counter = 0;
 
-    // B3 related variable
-    static bit[7:0] previous_frame_xor 8'h00;
+    // B3 and C2 related variables
+    bit[7:0] vc4_xor;
+    
 
-    // C2 related variables
-    bit[7:0] c2_value;
+    /*
     typedef enum bit [7:0] {
         UNEQUIPPED           = 8'h00,
         EQUIPPED_NON_SPECIFIC = 8'h01,
@@ -28,20 +37,26 @@ class VC4;
         MAN_DQDB_MAPPING     = 8'h14,
         FDDI_MAPPING         = 8'h15
     } c2_state_e;
+    */
 
-    function new();
+
+    function new(bit[7:0] vc4_xor = 0);
         c4 = new();
-        j1_frame_counter;
         init_j1_frame();
-        B3 = previous_frame_xor;
+        B3 = vc4_xor;
     endfunction
 
+
     function void pre_randomize();
-        if (!c4.randomize()) begin
-            $display("VC4: C4 randomization failed");
-        end else begin
-            $display("VC4: This will be called just before randomization");
-            // Initialize Path Overhead according to ITU-T G.707
+        // $display("VC4: This will be called just before randomization");
+        // Initialize Path Overhead according to ITU-T G.707
+         
+        
+        
+    endfunction
+
+    function void post_randomize();
+        // $display("VC4: This will be called just after randomization");
             J1 = calculate_J1();
             B3 = calculate_B3();
             C2 = calculate_C2();
@@ -51,82 +66,167 @@ class VC4;
             F3 = calculate_F3();
             K3 = calculate_K3();
             N1 = calculate_N1();
-
-            update_previous_frame_xor();
-        end
+            insert_data();
+            insert_poh();
     endfunction
 
-    function void post_randomize();
-        //$display("VC4: This will be called just after randomization");
-    endfunction
-
-    function void init_j1_frame(string J1_TRACE_MESSAGE = "PARMAN_________");
-        for (int i = 0; i < J1_FRAME_LENGTH - 1; i++) begin
-            if (i < J1_TRACE_MESSAGE.len()) begin
-                j1_frame[i+1] = int'(byte'(J1_TRACE_MESSAGE[i]));
-            end else begin
-                j1_frame[i+1] = " "; // Space character
-            end
-        end
-        j1_frame[0] = calculate_crc7(j1_frame[1:J1_FRAME_LENGTH-1]);
-    endfunction
-
-    function byte calculate_J1();
-        byte frame_byte;
-
-        // Increment the frame counter and wrap around if necessary
-        j1_frame_counter = (j1_frame_counter + 1) % J1_FRAME_LENGTH;
-
-        frame_byte = j1_frame[j1_frame_counter];
-
-        // Set the first bit to 1 for CRC byte, 0 for other bytes
-        if (j1_frame_counter == 0) begin
-            frame_byte = frame_byte | 8'h80;
-        end else begin
-            frame_byte = frame_byte & 8'h7F;
-        end
-
-        add_poh_byte("J1", 0, frame_byte);
-        return frame_byte;
-    endfunction
-
-    function byte calculate_crc7(byte data[J1_FRAME_LENGTH-1]);
-        bit [6:0] crc = 7'h7F;
-        bit [7:0] current_byte;
-
-        for (int i = 0; i < J1_FRAME_LENGTH-1; i++) begin
-            current_byte = data[i];
-            for (int j = 0; j < 8; j++) begin
-                if ((crc[6] ^ current_byte[7]) == 1'b1) begin
-                    crc = (crc << 1) ^ 7'h09;
+    function void  update_vc4_data();
+        for (int i = 0; i < VC4_WIDTH ; i++) begin
+            for (int j = 0; j < VC4_LENGTH ; j++) begin
+                if(j == 0) begin
+                    case (i)
+                        0 : data[i][j] = J1;
+                        1 : data[i][j] = B3;
+                        2 : data[i][j] = C2;
+                        3 : data[i][j] = G1;
+                        4 : data[i][j] = F2;
+                        5 : data[i][j] = H4;
+                        6 : data[i][j] = F3;
+                        7 : data[i][j] = K3;
+                        8 : data[i][j] = N1;
+                        default: data[i][j] = 8'b0;
+                    endcase
                 end else begin
-                    crc = crc << 1;
+                    data[i][j] = c4.data[i][j-1];
                 end
-                current_byte = current_byte << 1;
+            end
+            calculate_vc4_xor();
+        end
+    endfunction
+
+    
+    function bit [7:0] calculate_J1();
+        return j1_frame[j1_frame_counter++];
+    endfunction
+
+    function bit [7:0] calculate_B3();
+        return B3;
+    endfunction
+
+    function bit [7:0] calculate_C2();
+        return C2;
+    endfunction
+
+    function bit [7:0] calculate_G1();
+        // G1: Path Status
+        // Bits 1-4: REI (Remote Error Indication)
+        // Bits 5-7: Path Status
+        // Bit 8: Reserved
+        bit[3:0] rei = 4'h0; // Assuming no errors
+        bit[3:0] path_status = 3'b000; // Assuming normal operation
+        return {1'b0, path_status, rei};
+    endfunction
+
+    function bit [7:0] calculate_F2();
+        // F2: Path User Channel
+        // This is typically used for communication between path terminating equipment
+        // For this application, we'll just return a fixed value
+        return 8'hAA;
+    endfunction
+
+    function bit [7:0] calculate_H4();
+        // H4: Multiframe Indicator
+        // Used for payloads requiring multiframe alignment
+        // For this application, we'll use a simple counter
+        static bit[3:0] h4_counter = 0;    // 4-bit counter
+        h4_counter = (h4_counter + 1);   
+        return h4_counter;
+    endfunction
+
+    function bit [7:0] calculate_F3();
+        // F3: Path User Channel
+        // Similar to F2, but for a different user
+        // For this application, we'll just return a fixed value
+        return 8'h55;
+    endfunction
+
+    function bit [7:0] calculate_K3();
+        // K3: APS (Automatic Protection Switching) Channel
+        // Bits 1-4: Switching request type
+        // Bits 5-8: Channel number
+        // For this application, we'll assume no switching request
+        return 8'h00;
+    endfunction
+
+    function bit [7:0] calculate_N1();
+        // N1: Network Operator Byte
+        // This byte is reserved for network operator use
+        // For this application, we'll just return a fixed value
+        return 8'hFF;
+    endfunction
+
+
+    function void init_j1_frame();
+        for (int i = 1; i < J1_FRAME_LENGTH; i++) begin
+            if (i - 1 < J1_TRACE_MESSAGE.len()) begin
+                j1_frame[i][7] = 1'b0;
+                j1_frame[i][6:0] = int'(J1_TRACE_MESSAGE[i - 1]);
+            end else begin
+                j1_frame[i][7] = 1'b0;
+                j1_frame[i][6:0] = int'(" "); // Space character
             end
         end
-
-        return byte'(crc);
+        j1_frame[0][7] = 1'b1;
+        j1_frame[0][6:0] = crc7_calculate(j1_frame[1:J1_FRAME_LENGTH-1]);
     endfunction
 
-    function byte calculate_B3();
-        byte bip8 = previous_frame_xor;
-        add_poh_byte("B3", 1, bip8);
-        return bip8;
+    // New function to update J1 trace message
+    // Usage:     vc4_instance.update_j1_trace_message("NEW_MESSAGE____");
+    function void update_j1_trace_message(string new_message);
+        J1_TRACE_MESSAGE = new_message;
+        init_j1_frame();
+        j1_frame_counter = 0;
+        J1 = calculate_J1();
+        insert_poh();
     endfunction
 
-    function byte calculate_C2();
-        add_poh_byte("C2", 2, c2_value);
-        return c2_value;
+    function bit [6:0] crc7_calculate (input bit [0:J1_FRAME_LENGTH-2][7:0] data );
+        bit [7:0] crc;
+        bit [7:0] byte1;
+        integer i, j;
+
+        begin
+            crc = 8'h00;  // Initialize CRC to 0
+
+            // Iterate over each byte in the input data
+            for (i = 0; i < J1_FRAME_LENGTH-1; i++) begin
+                byte1 = data[i];
+                crc ^= byte1;  // XOR byte into the CRC
+
+                // Process each bit in the byte
+                for (j = 0; j < 8; j++) begin
+                    if (crc[7] == 1'b1) begin
+                        crc = (crc << 1) ^ 8'h89;  // Shift left and XOR with polynomial
+                    end else begin
+                        crc = crc << 1;  // Just shift left
+                    end
+                end
+            end
+
+            crc7_calculate = crc[7:1];  // Return the top 7 bits as CRC-7
+        end
     endfunction
 
+    function void calculate_vc4_xor();
+        bit[7:0] current_vc4_xor = 8'h00;
+        for (int i = 0; i < VC4_WIDTH ; i++) begin
+            for (int j = 0; j < VC4_LENGTH ; j++) begin
+                current_vc4_xor ^= data[i][j];
+            end
+        end
+        vc4_xor = current_vc4_xor;
+    endfunction
+
+    // Function to set C2 value
     function void set_c2_value(bit[7:0] value);
-        c2_value = value;
-        display_c2_state(value);
+        C2 = value;
+        insert_poh();
+        // display_c2_state(value);
     endfunction
 
+    // Function to get C2 state as a string based on the current c2_value
     function string get_c2_state_string();
-        case (c2_value)
+        case (C2)
             8'h00: return "Unequipped";
             8'h01: return "Equipped - non specific";
             8'h02: return "TUG structure";
@@ -145,49 +245,29 @@ class VC4;
         $display("C2 State: %s", get_c2_state_string());
     endfunction
 
-    function byte calculate_G1();
-        byte rei = 4'h0; // Assuming no errors
-        byte path_status = 3'b000; // Assuming normal operation
-        byte g1_byte = {1'b0, path_status, rei};
-        add_poh_byte("G1", 3, g1_byte);
-        return g1_byte;
-    endfunction
 
-    function byte calculate_F2();
-        byte f2_byte = 8'hAA;
-        add_poh_byte("F2", 4, f2_byte);
-        return f2_byte;
-    endfunction
 
-    function byte calculate_H4();
-        static byte h4_counter = 0;
-        h4_counter = (h4_counter + 1) % 16; // 4-bit counter
-        add_poh_byte("H4", 5, h4_counter);
-        return h4_counter;
-    endfunction
 
-    function byte calculate_F3();
-        byte f3_byte = 8'h55;
-        add_poh_byte("F3", 6, f3_byte);
-        return f3_byte;
-    endfunction
+    function void insert_poh();
+        // Create a new array with increased width
+        // Add POH as the last column
 
-    function byte calculate_K3();
-        byte k3_byte = 8'h00;
-        add_poh_byte("K3", 7, k3_byte);
-        return k3_byte;
-    endfunction
+        // Update POH array
+        poh[0] = J1;
+        poh[1] = B3;
+        poh[2] = C2;
+        poh[3] = G1;
+        poh[4] = F2;
+        poh[5] = H4;
+        poh[6] = F3;
+        poh[7] = K3;
+        poh[8] = N1;
 
-    function byte calculate_N1();
-        byte n1_byte = 8'hFF;
-        add_poh_byte("N1", 8, n1_byte);
-        return n1_byte;
-    endfunction
+        for (int i = 0; i < 9; i++) begin
+            data[i][0] = poh[i];
+        end
 
-    function void add_poh_byte(string byte_name, int poh_index, byte value);
-        poh[poh_index] = value;
-        data[poh_index][0] = value;
-        $display("Added %s byte to POH at index %0d with value 0x%0h", byte_name, poh_index, value);
+        calculate_vc4_xor();
     endfunction
 
     function void display_poh();
@@ -197,14 +277,13 @@ class VC4;
         end
     endfunction
 
-    function void update_previous_frame_xor();
-        bit[7:0] current_frame_xor = 8'h00;
-        for (int i = 0; i < vc4_Width; i++) begin
-            for (int j = 0; j < vc4_Length; j++) begin
-                current_frame_xor ^= data[i][j];
+    function void insert_data();
+        // Copy existing data
+        for (int i = 0; i < VC4_WIDTH; i++) begin
+            for (int j = 1; j < VC4_LENGTH; j++) begin
+                data[i][j] = c4.data[i][j-1];
             end
         end
-        previous_frame_xor = current_frame_xor;
     endfunction
 
 endclass
