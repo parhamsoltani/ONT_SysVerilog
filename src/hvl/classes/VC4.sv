@@ -7,13 +7,13 @@ class VC4;
     bit [0:VC4_WIDTH-1][0:VC4_LENGTH-1][BYTE_NUM-1:0] data;
     bit [7:0] J1; 
     bit [7:0] B3;
-    bit [7:0] C2;
-    bit [7:0] G1;
-    bit [7:0] F2;
-    bit [7:0] H4;
-    bit [7:0] F3;
-    bit [7:0] K3;
-    bit [7:0] N1;
+    static bit [7:0] C2;
+    static bit [7:0] G1;
+    static bit [7:0] F2;
+    static bit [7:0] H4;
+    static bit [7:0] F3;
+    static bit [7:0] K3;
+    static bit [7:0] N1;
 
     // J1 trace variables
     localparam int J1_FRAME_LENGTH = 16;

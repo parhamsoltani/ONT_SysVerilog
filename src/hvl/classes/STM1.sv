@@ -6,34 +6,34 @@ class STM1;
     // STM-1 full frame
     bit [0:STM1_WIDTH-1][0:STM1_LENGTH-1][BYTE_NUM-1:0] frame;
     // RSOH
-    bit [7:0] A1;
-    bit [7:0] A2;
-    bit [7:0] C1;
-    bit [7:0] J0;
-    bit [7:0] B1;
-    bit [7:0] E1;
-    bit [7:0] F1;
-    bit [7:0] D1;
-    bit [7:0] D2;
-    bit [7:0] D3;
-    // MSOH
-    bit [23:0] B2;
-    bit [7:0] K1;
-    bit [7:0] K2;
-    bit [7:0] D4;
-    bit [7:0] D5;
-    bit [7:0] D6;
-    bit [7:0] D7;
-    bit [7:0] D8;
-    bit [7:0] D9;
-    bit [7:0] D10;
-    bit [7:0] D11;
-    bit [7:0] D12;
-    bit [7:0] S1;
-    bit [7:0] Z1;
-    bit [7:0] Z2;
-    bit [7:0] M1;
-    bit [7:0] E2;
+    static bit [7:0] A1;
+    static bit [7:0] A2;
+    static bit [7:0] C1;
+    static bit [7:0] J0;
+    static bit [7:0] B1;
+    static bit [7:0] E1;
+    static bit [7:0] F1;
+    static bit [7:0] D1;
+    static bit [7:0] D2;
+    static bit [7:0] D3;
+    // MSO = 0H
+    static bit [23:0] B2;
+    static bit [7:0] K1;
+    static bit [7:0] K2;
+    static bit [7:0] D4;
+    static bit [7:0] D5;
+    static bit [7:0] D6;
+    static bit [7:0] D7;
+    static bit [7:0] D8;
+    static bit [7:0] D9;
+    static bit [7:0] D10;
+    static bit [7:0] D11;
+    static bit [7:0] D12;
+    static bit [7:0] S1;
+    static bit [7:0] Z1;
+    static bit [7:0] Z2;
+    static bit [7:0] M1;
+    static bit [7:0] E2;
 
     // AUP
     bit [7:0] H1;
@@ -56,9 +56,6 @@ class STM1;
         init_j0_frame();
         B1 = frame_xor;
         B2 = semi_frame_xor;
-        // $display("STM before soh");
-        // calculate_soh();
-        // $display("STM new ended!");
     endfunction
 
     function void pre_randomize();
@@ -206,27 +203,27 @@ class STM1;
 
     function bit [7:0] calculate_E1();
         // null 0 
-        return 8'b0;
+        return E1;
     endfunction
 
     function bit [7:0] calculate_F1();
         // null
-        return 8'b0;
+        return F1;
     endfunction
 
     function bit [7:0] calculate_D1();
         // writable
-        return 8'b0;
+        return D1;
     endfunction
 
     function bit [7:0] calculate_D2();
         // writable
-        return 8'b0;
+        return D2;
     endfunction
 
     function bit [7:0] calculate_D3();
         // writable
-        return 8'b0;
+        return D3;
     endfunction
 
     function bit [23:0] calculate_B2();
@@ -235,82 +232,82 @@ class STM1;
 
     function bit [7:0] calculate_K1();
         // null
-        return 8'b0;
+        return K1;
     endfunction
 
     function bit [7:0] calculate_K2();
         // null
-        return 8'b0;
+        return K2;
     endfunction
 
     function bit [7:0] calculate_D4();
         // writable
-        return 8'b0;
+        return D4;
     endfunction
 
     function bit [7:0] calculate_D5();
         // writable
-        return 8'b0;
+        return D5;
     endfunction
 
     function bit [7:0] calculate_D6();
         // writable
-        return 8'b0;
+        return D6;
     endfunction
 
     function bit [7:0] calculate_D7();
         // writable
-        return 8'b0;
+        return D7;
     endfunction
     
     function bit [7:0] calculate_D8();
         // writable
-        return 8'b0;
+        return D8;
     endfunction
     
     function bit [7:0] calculate_D9();
         // writable
-        return 8'b0;
+        return D9;
     endfunction
 
     function bit [7:0] calculate_D10();
         // writable
-        return 8'b0;
+        return D10;
     endfunction
 
     function bit [7:0] calculate_D11();
         // writable
-        return 8'b0;
+        return D11;
     endfunction
 
     function bit [7:0] calculate_D12();
         // writable
-        return 8'b0;
+        return D12;
     endfunction
 
     function bit [7:0] calculate_S1();
         // null
-        return 8'b0;
+        return S1;
     endfunction
 
     function bit [7:0] calculate_Z1();
         // null
-        return 8'b0;
+        return Z1;
     endfunction
 
     function bit [7:0] calculate_Z2();
         // null
-        return 8'b0;
+        return Z2;
     endfunction
 
     function bit [7:0] calculate_M1();
         // null
-        return 8'b0;
+        return M1;
     endfunction
 
     function bit [7:0] calculate_E2();
         // null
-        return 8'b0;
+        return E2;
     endfunction
 
     function bit [6:0] crc7_calculate (input bit [0:J0_FRAME_LENGTH-2][7:0] data);
