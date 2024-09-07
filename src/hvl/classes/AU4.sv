@@ -4,8 +4,8 @@ import class_pkg::*;
 
 class AU4;
     VC4 vc4;
-    rand bit [15:0] h1h2; // H1 and H2 bytes of the AU pointer
-    rand bit [BYTE_NUM-1:0] h3; // H3 byte of the AU pointer
+    bit [15:0] h1h2; // H1 and H2 bytes of the AU pointer
+    bit [BYTE_NUM-1:0] h3; // H3 byte of the AU pointer
     bit [7:0] aup[3]; // Administrative Unit Pointer
     typedef bit [BYTE_NUM-1:0] au4_frame_t [VC4_WIDTH][VC4_LENGTH];  // Define a typedef for the array dimensions of the frame
     
@@ -21,12 +21,12 @@ class AU4;
     localparam bit [BYTE_NUM-1:0] POSITIVE_STUFF_OPPORTUNITY = 8'hB8;
     localparam bit [BYTE_NUM-1:0] NEGATIVE_STUFF_OPPORTUNITY = 8'hC5;
     
-    constraint h1h2_format {
+/*    constraint h1h2_format {
         h1h2[15:12] == 4'b0110;  // NDF disabled by default
         h1h2[11:10] == 2'b10;    // SS bits set to '1 0'
         h1h2[9:0] == 10'h20A;    // Default pointer value 522 (0x20A)
     }
-    
+ */   
     function new(bit[7:0] vc4_xor = 0);
         vc4 = new(vc4_xor);
     endfunction
@@ -144,6 +144,23 @@ class AU4;
         h1h2 = {4'b1010, 2'b10, increment_flag, decrement_flag, pointer_value[9:0]};
         
         calculate_aup();
+    endfunction
+
+    function void process_pointer();
+        bit [9:0] id_bits;
+        id_bits = h1h2[9:0];
+
+        if (increment_flag) begin
+            // Invert all 'I' bits for positive justification
+            id_bits = id_bits ^ 10'b1010101010;
+        end else if (decrement_flag) begin
+            // Invert all 'D' bits for negative justification
+            id_bits = id_bits ^ 10'b0101010101;
+        end
+
+        h1h2 = {h1h2[15:10], id_bits};
+        calculate_aup();
+
     endfunction
     
 endclass
